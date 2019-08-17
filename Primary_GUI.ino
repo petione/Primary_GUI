@@ -52,6 +52,9 @@ double humidity_html;
 const char* Config_Wifi_name = CONFIG_WIFI_LOGIN;
 const char* Config_Wifi_pass = CONFIG_WIFI_PASSWORD;
 
+unsigned long wifi_checkDelay = 20000;  // Wi-Fi podłącz tacę opóźniającą, aby ponownie połączyć się co 20 sekund
+unsigned long wifimilis;
+
 const char* www_username;
 const char* www_password;
 const char* update_path = UPDATE_PATH;
@@ -92,6 +95,8 @@ char Location_Pass[MAX_SUPLA_PASS];
 void setup() {
   Serial.begin(74880);
   EEPROM.begin(EEPROM_SIZE);
+
+  client.setTimeout(500);
 
   if ('1' != char(EEPROM.read(EEPROM_SIZE - 1))) {
     czyszczenieEEPROM();
@@ -198,17 +203,18 @@ int supla_arduino_tcp_read(void *buf, int count) {
   if ( size > 0 ) {
     if ( size > count ) size = count;
     return client.read((uint8_t *)buf, size);
-  };
+  }
 
   return -1;
-};
+}
 
 int supla_arduino_tcp_write(void *buf, int count) {
   return client.write((const uint8_t *)buf, count);
-};
+}
 
 bool supla_arduino_svr_connect(const char *server, int port) {
-  return client.connect(server, 2015);
+  return WiFi.status() == WL_CONNECTED ? client.connect(server, 2015) : false;
+  //return client.connect(server, 2015);
 }
 
 bool supla_arduino_svr_connected(void) {
@@ -332,33 +338,49 @@ void Tryb_konfiguracji() {
 }
 
 void WiFi_up() {
-  //  WiFi.setOutputPower(20.5);
-  supla_led_blinking(LED_CONFIG_PIN, 500);
-  WiFi.disconnect();
-  WiFi.hostname(String(read_supla_hostname().c_str()));
-  WiFi.softAPdisconnect(true);
+  boolean state = true;
+  int i = 0;
+  if (millis() > wifimilis)  {
+    //  WiFi.setOutputPower(20.5);
+    supla_led_blinking(LED_CONFIG_PIN, 500);
+    WiFi.disconnect();
+    WiFi.hostname(String(read_supla_hostname().c_str()));
+    WiFi.softAPdisconnect(true);
+    WiFi.mode(WIFI_STA);
 
-  String esid = String(read_wifi_ssid().c_str());
-  String epass = String(read_wifi_pass().c_str());
-  Serial.println("WiFi init");
-  Serial.print("SSID: ");
-  Serial.println(esid);
-  Serial.print("PASSWORD: ");
-  Serial.println(epass);
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(esid.c_str(), epass.c_str());
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+    String esid = String(read_wifi_ssid().c_str());
+    String epass = String(read_wifi_pass().c_str());
+    Serial.println("WiFi init");
+    Serial.print("SSID: ");
+    Serial.println(esid);
+    Serial.print("PASSWORD: ");
+    Serial.println(epass);
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(esid.c_str(), epass.c_str());
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(50);
+      SuplaDevice.iterate();
+      Serial.print(".");
+      if (i > 30) {
+        state = false;
+        wifimilis = (millis() + wifi_checkDelay) ;
+        break;
+      }
+      i++;
+    }
+    if (state) {
+      Serial.print("\nlocalIP: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("subnetMask: ");
+      Serial.println(WiFi.subnetMask());
+      Serial.print("gatewayIP: ");
+      Serial.println(WiFi.gatewayIP());
+      long rssi = WiFi.RSSI();
+      Serial.print("siła sygnału (RSSI): ");
+      Serial.print(rssi);
+      Serial.println(" dBm");
+    }
   }
-
-  Serial.print("\nlocalIP: ");
-  Serial.println(WiFi.localIP());
-  Serial.print("subnetMask: ");
-  Serial.println(WiFi.subnetMask());
-  Serial.print("gatewayIP: ");
-  Serial.println(WiFi.gatewayIP());
 }
 
 void first_start(void) {
@@ -512,4 +534,3 @@ void add_Relay_Button_Invert(int relay, int button, int type) {
 
   SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true);
 }
-

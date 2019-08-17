@@ -478,15 +478,15 @@ void add_Led_Config(int led) {
 }
 
 void add_Relay(int relay) {
-  SuplaDevice.addRelay(relay);
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
+  SuplaDevice.addRelayButton(relay, 0, 0, read_supla_relay_flag(nr_relay));
 }
 
 void add_Relay_Invert(int relay) {
-  SuplaDevice.addRelay(relay, true);
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
+  SuplaDevice.addRelayButton(relay, 0, 0, read_supla_relay_flag(nr_relay), true);
 }
 
 void add_DHT11_Thermometer(int thermpin) {

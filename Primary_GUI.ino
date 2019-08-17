@@ -506,7 +506,7 @@ void add_DHT22_Thermometer(int thermpin) {
 void add_DS18B20_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDS18B20Thermometer();
   ds18x20[channel] = thermpin;
-  ds18x20_channel[nr_dht] = channel;
+  ds18x20_channel[nr_ds18b20] = channel;
   nr_ds18b20++;
 }
 

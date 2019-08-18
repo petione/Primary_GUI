@@ -26,15 +26,15 @@ extern "C" {
 
 void supla_board_configuration(void) {
 
-  //    add_Relay(5);
-//  add_Relay_Invert(5);
+  //  add_Relay(5);
+  //  add_Relay_Invert(5);
   
   //  add_Relay_Button_Invert(5, 14, CHOICE_TYPE);
   //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
   
   add_Relay_Button(13, 12, CHOICE_TYPE);
   
-  //  add_Roller_Shutter_Relays(5, 13);
+  //  add_Roller_Shutter_Relays(5, 13) ;
   //  add_Roller_Shutter_Buttons(0, 14, 12);
   //  SuplaDevice.setRollerShutterFuncImpl(&supla_rs_SavePosition, &supla_rs_LoadPosition, &supla_rs_SaveSettings, &supla_rs_LoadSettings);
   

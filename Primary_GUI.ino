@@ -130,7 +130,6 @@ void setup() {
   strcpy(Supla_server, read_supla_server().c_str());
   strcpy(Location_Pass, read_supla_pass().c_str());
 
-  SuplaDevice.setStatusFuncImpl(&status_func);
   if (String(read_wifi_ssid().c_str()) == 0
       || String(read_wifi_pass().c_str()) == 0
       || String(read_login().c_str()) == 0
@@ -149,7 +148,9 @@ void setup() {
   my_mac_adress();
 
 
-  //  SuplaDevice.setStatusFuncImpl(&status_func);
+  SuplaDevice.setStatusFuncImpl(&status_func);
+  SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
+  SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
   SuplaDevice.setName(read_supla_hostname().c_str());
 
   supla_ds18b20_start();
@@ -227,6 +228,26 @@ void supla_arduino_svr_disconnect(void) {
 
 void supla_arduino_eth_setup(uint8_t mac[6], IPAddress *ip) {
   WiFi_up();
+}
+
+int supla_DigitalRead(int channelNumber, uint8_t pin) {
+   
+    int result = digitalRead(pin);
+    /*Serial.print("Read(");
+    Serial.print(pin);
+    Serial.print("): ");
+    Serial.println(result);*/
+    return result;
+}
+
+void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
+
+    /*Serial.print("Write(");
+    Serial.print(pin);
+    Serial.print(",");
+    Serial.print(val);
+    Serial.println(")");*/
+    digitalWrite(pin, val);
 }
 
 
@@ -480,13 +501,13 @@ void add_Led_Config(int led) {
 void add_Relay(int relay) {
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
-  SuplaDevice.addRelayButton(relay, 0, 0, read_supla_relay_flag(nr_relay));
+  SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay));
 }
 
 void add_Relay_Invert(int relay) {
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
-  SuplaDevice.addRelayButton(relay, 0, 0, read_supla_relay_flag(nr_relay), true);
+  SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay), true);
 }
 
 void add_DHT11_Thermometer(int thermpin) {

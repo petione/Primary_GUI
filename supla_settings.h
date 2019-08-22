@@ -24,6 +24,8 @@
 #define  TEMPERATURE_PRECISION  10  // rozdzielczość czujnika DS 9 -12 bit
 //LED CONFIG *********************************************************************************************
 #define LED_CONFIG_PIN         2
+//CONFIG PIN *********************************************************************************************
+#define CONFIG_PIN             0 //D3     // triger config
 
 //EEPROM *************************************************************************************************
 #define EEPROM_SIZE           4096/4
@@ -56,6 +58,7 @@ void add_Sensor(int sensor);
 void add_Roller_Shutter_Buttons(int channel, int button1, int button2);
 void add_Roller_Shutter_Relays(int relay1, int relay2);
 void add_Led_Config(int led);
+void add_Config(int pin);
 void add_Relay(int relay);
 void add_Relay_Invert(int relay);
 void add_DHT11_Thermometer(int thermpin);

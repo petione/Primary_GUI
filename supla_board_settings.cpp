@@ -48,4 +48,6 @@ void supla_board_configuration(void) {
   //  SuplaDevice.addRelayButton(5, 14, INPUT_TYPE_BTN_MONOSTABLE, 0, SUPLA_BIT_RELAYFUNC_LIGHTSWITCH);
 
     add_Led_Config(LED_CONFIG_PIN);
+    add_Config(CONFIG_PIN);
+    
 }

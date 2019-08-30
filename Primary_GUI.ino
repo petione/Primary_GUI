@@ -547,13 +547,13 @@ void supla_ds18b20_start(void) {
       sensor[i].setOneWire(&ds18x20[i]);
       sensor[i].begin();
 
-      /*if (ds18b20[i].address == NULL) {
+      if (ds18b20[i].address == NULL) {
         DeviceAddress deviceAddress;
         if (sensor[i].getAddress(deviceAddress, 0)) {
           ds18b20[i].address = GetAddressToString(deviceAddress);
           memcpy(ds18b20[i].deviceAddress, deviceAddress, sizeof(deviceAddress));
         }
-        }*/
+        }
       sensor[i].setResolution(ds18b20[i].deviceAddress, TEMPERATURE_PRECISION);
     }
   }

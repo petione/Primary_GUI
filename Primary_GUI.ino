@@ -625,7 +625,6 @@ void add_DS18B20_Thermometer(int thermpin) {
   ds18b20[nr_ds18b20].pin = thermpin;
   ds18b20[nr_ds18b20].channel = channel;
   ds18b20[nr_ds18b20].type = 0;
-  ds18b20[nr_ds18b20].nr = nr_ds18b20;
   nr_ds18b20++;
 }
 
@@ -663,7 +662,6 @@ void add_DS18B20Multi_Thermometer(int thermpin) {
     ds18b20[nr_ds18b20].pin = thermpin;
     ds18b20[nr_ds18b20].channel = channel;
     ds18b20[nr_ds18b20].type = 1;
-    ds18b20[nr_ds18b20].nr = nr_ds18b20;
     ds18b20[nr_ds18b20].address = read_DS18b20_address(i);
     nr_ds18b20++;
   }

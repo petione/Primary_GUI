@@ -87,6 +87,9 @@ String supla_webpage_search(int save) {
       if (temp != -275)content += temp;
       else content += "--.--";
       content += " <b>&deg;C</b> ";
+      content += "</label>";
+      content += "<label style='left:80px'>GPIO: ";
+      content += String(ds18b20[i].pin);
       content += "</label></i>";
     }
     content += "</div>";

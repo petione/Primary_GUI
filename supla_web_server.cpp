@@ -97,8 +97,8 @@ String supla_webpage_search(int save) {
   content += "<div class='w'>";
   content += "<h3>Znalezione DS18b20</h3>";
   numberOfDevices = sensor[0].getDeviceCount();
-  
-  for (int i = 0; i < MAX_DS18B20; i++) {
+
+  for (int i = 0; i < nr_ds18b20; i++) {
     // Search the wire for address
     if ( sensor[i].getAddress(tempSensor, i) ) {
       content += "<i><input value='" + GetAddressToString(tempSensor) + "' length=";
@@ -229,16 +229,23 @@ String supla_webpage_start(int save) {
     content += "<h3>Temperatura</h3>";
     for (int i = 0; i < nr_ds18b20; i++) {
       double temp = get_temperature(ds18b20[i].channel, 0);
-
-      content += "<i><input name='ds18b20_id_";
-      content += i;
-      content += "' value='" + String(ds18b20[i].address.c_str()) + "' maxlength=";
-      content += MAX_DS18B20_SIZE;
-      content += "><label>";
-      if (temp != -275)content += temp;
-      else content += "--.--";
-      content += " <b>&deg;C</b> ";
-      content += "</label></i>";
+      if (ds18b20[i].type == 1) {
+        content += "<i><input name='ds18b20_id_";
+        content += i;
+        content += "' value='" + String(ds18b20[i].address.c_str()) + "' maxlength=";
+        content += MAX_DS18B20_SIZE;
+        content += "><label>";
+        if (temp != -275)content += temp;
+        else content += "--.--";
+        content += " <b>&deg;C</b> ";
+        content += "</label></i>";
+      } else if (ds18b20[i].type == 0) {
+        content += "<i><label>";
+        if (temp != -275)content += temp;
+        else content += "--.--";
+        content += " <b>&deg;C</b> ";
+        content += "</label></i>";
+      }
     }
     content += "</div>";
   }

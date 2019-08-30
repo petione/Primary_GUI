@@ -332,12 +332,14 @@ void createWebServer() {
     }
     if (nr_ds18b20 > 0) {
       for (int i = 0; i < nr_ds18b20; i++) {
-        String ds = "ds18b20_id_";
-        ds += i;
-        String address = httpServer.arg(ds);
-        save_DS18b20_address(address, i);
-        ds18b20[i].address = address;
-        read_DS18b20_address(i);
+        if (ds18b20[i].type == 1) {
+          String ds = "ds18b20_id_";
+          ds += i;
+          String address = httpServer.arg(ds);
+          save_DS18b20_address(address, i);
+          ds18b20[i].address = address;
+          read_DS18b20_address(i);
+        }
       }
     }
 
@@ -543,17 +545,17 @@ void supla_ds18b20_start(void) {
     } else {
       Serial.println("OFF");
     }
-    for (int i = 0; i < MAX_DS18B20; i++) {
+    for (int i = 0; i < nr_ds18b20; i++) {
       sensor[i].setOneWire(&ds18x20[i]);
       sensor[i].begin();
 
-      if (ds18b20[i].address == NULL) {
+      if (ds18b20[i].type == 0) {
         DeviceAddress deviceAddress;
         if (sensor[i].getAddress(deviceAddress, 0)) {
           ds18b20[i].address = GetAddressToString(deviceAddress);
           memcpy(ds18b20[i].deviceAddress, deviceAddress, sizeof(deviceAddress));
         }
-        }
+      }
       sensor[i].setResolution(ds18b20[i].deviceAddress, TEMPERATURE_PRECISION);
     }
   }
@@ -622,6 +624,7 @@ void add_DS18B20_Thermometer(int thermpin) {
   ds18x20[nr_ds18b20] = thermpin;
   ds18b20[nr_ds18b20].pin = thermpin;
   ds18b20[nr_ds18b20].channel = channel;
+  ds18b20[nr_ds18b20].type = 0;
   ds18b20[nr_ds18b20].nr = nr_ds18b20;
   nr_ds18b20++;
 }
@@ -659,6 +662,7 @@ void add_DS18B20Multi_Thermometer(int thermpin) {
     ds18x20[nr_ds18b20] = thermpin;
     ds18b20[nr_ds18b20].pin = thermpin;
     ds18b20[nr_ds18b20].channel = channel;
+    ds18b20[nr_ds18b20].type = 1;
     ds18b20[nr_ds18b20].nr = nr_ds18b20;
     ds18b20[nr_ds18b20].address = read_DS18b20_address(i);
     nr_ds18b20++;

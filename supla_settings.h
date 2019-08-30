@@ -54,6 +54,7 @@ typedef struct {
   int channel;
   int nr;
   String address;
+  int type; //0-single 1-multi
   DeviceAddress deviceAddress;
   long lastTemperatureRequest;
   bool TemperatureRequestInProgress;

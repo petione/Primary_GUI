@@ -649,6 +649,8 @@ void add_Relay_Button_Invert(int relay, int button, int type) {
     int select_button = read_supla_button_type(nr_button);
     type = select_button;
   }
+
+  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true); 
 }
 
 void add_DS18B20Multi_Thermometer(int thermpin) {

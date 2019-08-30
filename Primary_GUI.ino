@@ -55,6 +55,12 @@ const char* Config_Wifi_pass = CONFIG_WIFI_PASSWORD;
 unsigned long wifi_checkDelay = 20000;  // Wi-Fi podłącz tacę opóźniającą, aby ponownie połączyć się co 20 sekund
 unsigned long wifimilis;
 
+//CONFIG
+int config_state = HIGH;
+int last_config_state = HIGH;
+unsigned long time_last_config_change;
+long config_delay = 5000;
+
 const char* www_username;
 const char* www_password;
 const char* update_path = UPDATE_PATH;
@@ -98,6 +104,7 @@ void setup() {
 
   client.setTimeout(500);
 
+
   if ('1' != char(EEPROM.read(EEPROM_SIZE - 1))) {
     czyszczenieEEPROM();
     first_start();
@@ -109,6 +116,7 @@ void setup() {
   if (drd.detectDoubleReset()) {
     drd.stop();
     gui_color = GUI_GREEN;
+    Modul_tryb_konfiguracji = 2;
     Tryb_konfiguracji();
   }
   else gui_color = GUI_BLUE;
@@ -130,7 +138,6 @@ void setup() {
   strcpy(Supla_server, read_supla_server().c_str());
   strcpy(Location_Pass, read_supla_pass().c_str());
 
-  SuplaDevice.setStatusFuncImpl(&status_func);
   if (String(read_wifi_ssid().c_str()) == 0
       || String(read_wifi_pass().c_str()) == 0
       || String(read_login().c_str()) == 0
@@ -141,7 +148,7 @@ void setup() {
      ) {
 
     gui_color = GUI_GREEN;
-
+    Modul_tryb_konfiguracji = 2;
     Tryb_konfiguracji();
   }
 
@@ -149,7 +156,10 @@ void setup() {
   my_mac_adress();
 
 
-  //  SuplaDevice.setStatusFuncImpl(&status_func);
+  SuplaDevice.setStatusFuncImpl(&status_func);
+  SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
+  SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
+  SuplaDevice.setTimerFuncImpl(&supla_timer);
   SuplaDevice.setName(read_supla_hostname().c_str());
 
   supla_ds18b20_start();
@@ -174,7 +184,7 @@ void setup() {
 
   Serial.println();
   Serial.println("Uruchamianie serwera...");
-  WiFi.mode(WIFI_STA);
+  //WiFi.mode(WIFI_AP_STA);
 
   createWebServer();
 
@@ -185,13 +195,15 @@ void setup() {
 //*********************************************************************************************************
 
 void loop() {
-  if (WiFi.status() != WL_CONNECTED) {
+  if (WiFi.status() != WL_CONNECTED && Modul_tryb_konfiguracji == 0) {
     WiFi_up();
   }
   else httpServer.handleClient();
 
 
-  SuplaDevice.iterate();
+  if (Modul_tryb_konfiguracji == 0) {
+    SuplaDevice.iterate();
+  }
 
 }
 //*********************************************************************************************************
@@ -229,6 +241,48 @@ void supla_arduino_eth_setup(uint8_t mac[6], IPAddress *ip) {
   WiFi_up();
 }
 
+int supla_DigitalRead(int channelNumber, uint8_t pin) {
+
+  int result = digitalRead(pin);
+  /*Serial.print("Read(");
+    Serial.print(pin);
+    Serial.print("): ");
+    Serial.println(result);*/
+  return result;
+}
+
+void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
+
+  /*Serial.print("Write(");
+    Serial.print(pin);
+    Serial.print(",");
+    Serial.print(val);
+    Serial.println(")");*/
+  digitalWrite(pin, val);
+}
+
+void supla_timer() {
+
+  //CONFIG ****************************************************************************************************
+  int config_read = digitalRead(CONFIG_PIN); {
+    if (config_read != last_config_state) {
+      time_last_config_change = millis();
+    }
+    if ((millis() - time_last_config_change) > config_delay) {
+      if (config_read != config_state) {
+        Serial.println("Triger sate changed");
+        config_state = config_read;
+        if (config_state == LOW) {
+          gui_color = GUI_GREEN;
+          Modul_tryb_konfiguracji = 1;
+          Tryb_konfiguracji();
+        }
+      }
+    }
+    last_config_state = config_read;
+  }
+
+}
 
 SuplaDeviceCallbacks supla_arduino_get_callbacks(void) {
   SuplaDeviceCallbacks cb;
@@ -253,7 +307,7 @@ SuplaDeviceCallbacks supla_arduino_get_callbacks(void) {
 void createWebServer() {
 
   httpServer.on("/", []() {
-    if (Modul_tryb_konfiguracji != 2) {
+    if (Modul_tryb_konfiguracji == 0) {
       if (!httpServer.authenticate(www_username, www_password))
         return httpServer.requestAuthentication();
     }
@@ -261,7 +315,7 @@ void createWebServer() {
   });
 
   httpServer.on("/set0", []() {
-    if (Modul_tryb_konfiguracji != 2) {
+    if (Modul_tryb_konfiguracji == 0) {
       if (!httpServer.authenticate(www_username, www_password))
         return httpServer.requestAuthentication();
     }
@@ -295,7 +349,7 @@ void createWebServer() {
   //************************************************************
 
   httpServer.on("/firmware_up", []() {
-    if (Modul_tryb_konfiguracji != 2) {
+    if (Modul_tryb_konfiguracji == 0) {
       if (!httpServer.authenticate(www_username, www_password))
         return httpServer.requestAuthentication();
     }
@@ -304,7 +358,7 @@ void createWebServer() {
 
   //****************************************************************************************************************************************
   httpServer.on("/reboot", []() {
-    if (Modul_tryb_konfiguracji != 2) {
+    if (Modul_tryb_konfiguracji == 0) {
       if (!httpServer.authenticate(www_username, www_password))
         return httpServer.requestAuthentication();
     }
@@ -319,34 +373,34 @@ void createWebServer() {
 void Tryb_konfiguracji() {
   supla_led_blinking(LED_CONFIG_PIN, 100);
   my_mac_adress();
-  Serial.println("Tryb konfiguracji");
-
+  Serial.print("Tryb konfiguracji: ");
+  Serial.println(Modul_tryb_konfiguracji);
+  
   WiFi.disconnect();
   delay(1000);
-  WiFi.mode(WIFI_AP);
+  WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(Config_Wifi_name, Config_Wifi_pass);
   delay(1000);
   Serial.println("Tryb AP");
   createWebServer();
   httpServer.begin();
   Serial.println("Start Serwera");
-  Modul_tryb_konfiguracji = 2;
-  while (1) {
-    httpServer.handleClient();
-    //    SuplaDevice.iterate();
+
+  if (Modul_tryb_konfiguracji == 2) {
+    while (1) {
+      httpServer.handleClient();
+      //    SuplaDevice.iterate();
+    }
   }
 }
 
 void WiFi_up() {
-  boolean state = true;
   int i = 0;
   if (millis() > wifimilis)  {
     //  WiFi.setOutputPower(20.5);
     supla_led_blinking(LED_CONFIG_PIN, 500);
     WiFi.disconnect();
     WiFi.hostname(String(read_supla_hostname().c_str()));
-    WiFi.softAPdisconnect(true);
-    WiFi.mode(WIFI_STA);
 
     String esid = String(read_wifi_ssid().c_str());
     String epass = String(read_wifi_pass().c_str());
@@ -361,14 +415,14 @@ void WiFi_up() {
       delay(50);
       SuplaDevice.iterate();
       Serial.print(".");
-      if (i > 30) {
-        state = false;
+      if (i > 100) {
         wifimilis = (millis() + wifi_checkDelay) ;
+        Serial.println("");
         break;
       }
       i++;
     }
-    if (state) {
+    if (WiFi.status() == WL_CONNECTED) {
       Serial.print("\nlocalIP: ");
       Serial.println(WiFi.localIP());
       Serial.print("subnetMask: ");
@@ -477,16 +531,20 @@ void add_Led_Config(int led) {
   supla_led_set(led);
 }
 
+void add_Config(int pin) {
+  pinMode(pin, INPUT);
+}
+
 void add_Relay(int relay) {
-  SuplaDevice.addRelay(relay);
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
+  SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay));
 }
 
 void add_Relay_Invert(int relay) {
-  SuplaDevice.addRelay(relay, true);
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
+  SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay), true);
 }
 
 void add_DHT11_Thermometer(int thermpin) {

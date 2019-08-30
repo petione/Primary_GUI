@@ -18,6 +18,7 @@ String supla_webpage_start(int save);
 String supla_webpage_save(void);
 String supla_webpage_upddate(void);
 String supla_webpage_rebot(void);
+String supla_webpage_search(int save);
 void status_func(int status, const char *msg);
 
 #endif //SUPLA_WEB_SERVER_H

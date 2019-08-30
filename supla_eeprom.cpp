@@ -341,7 +341,7 @@ String read_guid(void) {
     read_eeprom += char(EEPROM.read(i));
     if ( (i % 2) == 0) {
       char *_guid = strcpy((char*)malloc(temp_read.length() + 1), temp_read.c_str());
-      GUID[ii] = strtoul( _guid, NULL, 16);;
+      GUID[ii] = strtoul( _guid, NULL, 16);
       temp_read = "0x";
       ii++;
     }
@@ -422,4 +422,41 @@ int read_supla_relay_state(int nr) {
   return read_eeprom - 48;
 }
 
+void save_DS18b20_address(String save, int nr) {
+  if (nr <= MAX_DS18B20) {
+    int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY + (MAX_DS18B20_SIZE * (nr + 1));
+    int len = save.length();
+    if (len == 0) len = 16;
+    EEPROM.begin(EEPROM_SIZE);
+    for (int i = 0; i < len; ++i) {
+      EEPROM.write(start + i, save[i]);
+    }
+    EEPROM.end();
+  }
+}
 
+String read_DS18b20_address(int nr) {
+  String read_eeprom = "";
+  DeviceAddress deviceAddress;
+  int i, ii = 0;
+  if (nr <= MAX_DS18B20) {
+    int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY + (MAX_DS18B20_SIZE * (nr + 1));
+    int koniec = start + MAX_DS18B20_SIZE;
+    EEPROM.begin(EEPROM_SIZE);
+    delay(100);
+    String temp_read = "0x";
+    for (i = start; i < koniec; ++i) {
+      temp_read += char(EEPROM.read(i));
+      read_eeprom += char(EEPROM.read(i));
+      if ( (i % 2) == 0) {
+        char *_address = strcpy((char*)malloc(temp_read.length() + 1), temp_read.c_str());
+        deviceAddress[ii] = strtoul( _address, NULL, 16);
+        temp_read = "0x";
+        ii++;
+      }
+    }
+    memcpy(ds18b20[nr].deviceAddress, deviceAddress, sizeof(deviceAddress));
+    EEPROM.end();
+  }
+  return read_eeprom;
+}

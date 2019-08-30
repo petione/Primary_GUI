@@ -42,8 +42,10 @@ int nr_relay = 0;
 int invert = 0;
 int nr_ds18b20 = 0;
 int nr_dht = 0;
+
 int dht_channel[MAX_DHT];
-int ds18x20_channel[MAX_DS18B20];
+//int ds18x20_channel[MAX_DS18B20];
+_ds18b20_t ds18b20[MAX_DS18B20];
 int relay_button_channel[MAX_RELAY];
 
 double temp_html;
@@ -52,7 +54,7 @@ double humidity_html;
 const char* Config_Wifi_name = CONFIG_WIFI_LOGIN;
 const char* Config_Wifi_pass = CONFIG_WIFI_PASSWORD;
 
-unsigned long wifi_checkDelay = 20000;  // Wi-Fi podłącz tacę opóźniającą, aby ponownie połączyć się co 20 sekund
+unsigned long wifi_checkDelay = 40000;  // Wi-Fi podłącz tacę opóźniającą, aby ponownie połączyć się co 30 sekund
 unsigned long wifimilis;
 
 //CONFIG
@@ -84,13 +86,10 @@ DHT dht_sensor[MAX_DHT] = {
 };
 
 // Setup a DS18B20 instance
-//OneWire oneWire(DS18B20PIN);
-//DallasTemperature sensors(&oneWire);
-
-OneWire ds18x20[MAX_DS18B20] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+OneWire ds18x20[MAX_DS18B20] = 0;
 //const int oneWireCount = sizeof(ds18x20) / sizeof(OneWire);
 DallasTemperature sensor[MAX_DS18B20];
-DeviceAddress deviceAddress;
+int channelNumberDS18B20 = 0;
 
 //SUPLA ****************************************************************************************************
 
@@ -164,17 +163,6 @@ void setup() {
 
   supla_ds18b20_start();
   supla_dht_start();
-  /*
-     // CHANNEL0 - TWO RELAYS (Roller shutter operation)
-    SuplaDevice.addRollerShutterRelays(5,     // 46 - ﻿﻿Pin number where the 1st relay is connected
-                                       13);    // 47 - ﻿Pin number where the 2nd relay is connected
-
-
-    SuplaDevice.setRollerShutterButtons(0,    // 0 - Channel Number
-                                        14,   // 20 - Pin where the 1st button is connected
-                                        12);  // 21 - Pin where the 2nd button is connected
-
-  */
 
   SuplaDevice.begin(GUID,              // Global Unique Identifier
                     mac,               // Ethernet MAC address
@@ -184,7 +172,7 @@ void setup() {
 
   Serial.println();
   Serial.println("Uruchamianie serwera...");
-  //WiFi.mode(WIFI_AP_STA);
+  WiFi.mode(WIFI_AP_STA);
 
   createWebServer();
 
@@ -342,6 +330,16 @@ void createWebServer() {
         save_supla_relay_flag(i, httpServer.arg(relay));
       }
     }
+    if (nr_ds18b20 > 0) {
+      for (int i = 0; i < nr_ds18b20; i++) {
+        String ds = "ds18b20_id_";
+        ds += i;
+        String address = httpServer.arg(ds);
+        save_DS18b20_address(address, i);
+        ds18b20[i].address = address;
+        read_DS18b20_address(i);
+      }
+    }
 
     httpServer.send(200, "text/html", supla_webpage_start(1));
   });
@@ -365,8 +363,22 @@ void createWebServer() {
     httpServer.send(200, "text/html", supla_webpage_start(2));
     delay(100);
     ESP.reset();
-  }
-               );
+  });
+  httpServer.on("/setup", []() {
+    if (Modul_tryb_konfiguracji == 0) {
+      if (!httpServer.authenticate(www_username, www_password))
+        return httpServer.requestAuthentication();
+    }
+    SetupDS18B20Multi();
+    httpServer.send(200, "text/html", supla_webpage_search(1));
+  });
+  httpServer.on("/search", []() {
+    if (Modul_tryb_konfiguracji == 0) {
+      if (!httpServer.authenticate(www_username, www_password))
+        return httpServer.requestAuthentication();
+    }
+    httpServer.send(200, "text/html", supla_webpage_search(0));
+  });
 }
 
 //****************************************************************************************************************************************
@@ -375,7 +387,7 @@ void Tryb_konfiguracji() {
   my_mac_adress();
   Serial.print("Tryb konfiguracji: ");
   Serial.println(Modul_tryb_konfiguracji);
-  
+
   WiFi.disconnect();
   delay(1000);
   WiFi.mode(WIFI_AP_STA);
@@ -387,8 +399,12 @@ void Tryb_konfiguracji() {
   Serial.println("Start Serwera");
 
   if (Modul_tryb_konfiguracji == 2) {
+    supla_ds18b20_start();
+    supla_dht_start();
+
     while (1) {
       httpServer.handleClient();
+
       //    SuplaDevice.iterate();
     }
   }
@@ -469,10 +485,28 @@ void get_temperature_and_humidity(int channelNumber, double *temp, double *humid
 
 double get_temperature(int channelNumber, double last_val) {
   double t = -275;
-  if ( sensor[channelNumber].getDeviceCount() > 0 ) {
-    sensor[channelNumber].requestTemperatures();
-    t = sensor[channelNumber].getTempCByIndex(0);
-    if (t == -127) t = -275;
+
+  int i = channelNumber - channelNumberDS18B20;
+  if ( sensor[i].getDeviceCount() > 0 ) {
+    if ( ds18b20[i].address != "FFFFFFFFFFFFFFFF" ) {
+      if ( millis() - ds18b20[i].lastTemperatureRequest < 0) {
+        ds18b20[i].lastTemperatureRequest = millis();
+      }
+
+      if (ds18b20[i].TemperatureRequestInProgress == false) {
+        sensor[i].requestTemperaturesByAddress(ds18b20[i].deviceAddress);
+        ds18b20[i].TemperatureRequestInProgress = true;
+      }
+
+      if ( millis() - ds18b20[i].lastTemperatureRequest > 1000) {
+        t = sensor[i].getTempC(ds18b20[i].deviceAddress);
+        if (t == -127) t = -275;
+        ds18b20[i].lastTemperatureRequest = millis();
+        ds18b20[i].TemperatureRequestInProgress = false;
+      }
+    } else {
+      t = -275;
+    }
   }
   return t;
 }
@@ -501,16 +535,35 @@ void supla_led_set(int ledPin) {
 }
 
 void supla_ds18b20_start(void) {
-  for (int i = 0; i < MAX_DS18B20; i++) {
-    sensor[i].setOneWire(&ds18x20[i]);
-    sensor[i].begin();
-    if (sensor[i].getAddress(deviceAddress, 0)) sensor[i].setResolution(deviceAddress, TEMPERATURE_PRECISION);
+  if (nr_ds18b20 > 0 ) {
+    Serial.println("DS18B2 init");
+    Serial.print("Parasite power is: ");
+    if ( sensor[0].isParasitePowerMode() ) {
+      Serial.println("ON");
+    } else {
+      Serial.println("OFF");
+    }
+    for (int i = 0; i < MAX_DS18B20; i++) {
+      sensor[i].setOneWire(&ds18x20[i]);
+      sensor[i].begin();
+
+      /*if (ds18b20[i].address == NULL) {
+        DeviceAddress deviceAddress;
+        if (sensor[i].getAddress(deviceAddress, 0)) {
+          ds18b20[i].address = GetAddressToString(deviceAddress);
+          memcpy(ds18b20[i].deviceAddress, deviceAddress, sizeof(deviceAddress));
+        }
+        }*/
+      sensor[i].setResolution(ds18b20[i].deviceAddress, TEMPERATURE_PRECISION);
+    }
   }
 }
 
 void supla_dht_start(void) {
-  for (int i = 0; i < MAX_DHT; i++) {
-    dht_sensor[i].begin();
+  if (nr_dht > 0 ) {
+    for (int i = 0; i < MAX_DHT; i++) {
+      dht_sensor[i].begin();
+    }
   }
 }
 
@@ -538,12 +591,14 @@ void add_Config(int pin) {
 void add_Relay(int relay) {
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
+  //SuplaDevice.addRelay(relay);
   SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay));
 }
 
 void add_Relay_Invert(int relay) {
   relay_button_channel[nr_relay] = relay;
   nr_relay++;
+  //SuplaDevice.addRelay(relay, true);
   SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay), true);
 }
 
@@ -563,8 +618,11 @@ void add_DHT22_Thermometer(int thermpin) {
 
 void add_DS18B20_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDS18B20Thermometer();
-  ds18x20[channel] = thermpin;
-  ds18x20_channel[nr_ds18b20] = channel;
+  channelNumberDS18B20 = channel;
+  ds18x20[nr_ds18b20] = thermpin;
+  ds18b20[nr_ds18b20].pin = thermpin;
+  ds18b20[nr_ds18b20].channel = channel;
+  ds18b20[nr_ds18b20].nr = nr_ds18b20;
   nr_ds18b20++;
 }
 
@@ -589,6 +647,62 @@ void add_Relay_Button_Invert(int relay, int button, int type) {
     int select_button = read_supla_button_type(nr_button);
     type = select_button;
   }
+}
 
-  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true);
+void add_DS18B20Multi_Thermometer(int thermpin) {
+  for (int i = 0; i < MAX_DS18B20; i++) {
+    int channel = SuplaDevice.addDS18B20Thermometer();
+    if (i == 0) {
+      channelNumberDS18B20 = channel;
+    }
+
+    ds18x20[nr_ds18b20] = thermpin;
+    ds18b20[nr_ds18b20].pin = thermpin;
+    ds18b20[nr_ds18b20].channel = channel;
+    ds18b20[nr_ds18b20].nr = nr_ds18b20;
+    ds18b20[nr_ds18b20].address = read_DS18b20_address(i);
+    nr_ds18b20++;
+  }
+}
+
+//Convert device id to String
+String GetAddressToString(DeviceAddress deviceAddress) {
+  String str = "";
+  for (uint8_t i = 0; i < 8; i++) {
+    if ( deviceAddress[i] < 16 ) str += String(0, HEX);
+    str += String(deviceAddress[i], HEX);
+  }
+  return str;
+}
+
+void SetupDS18B20Multi() {
+  DeviceAddress devAddr[MAX_DS18B20];  //An array device temperature sensors
+  int numberOfDevices; //Number of temperature devices found
+  numberOfDevices = sensor[0].getDeviceCount();
+  // Loop through each device, print out address
+  for (int i = 0; i < numberOfDevices; i++) {
+    sensor[i].requestTemperatures();
+    // Search the wire for address
+    if ( sensor[i].getAddress(devAddr[i], i) ) {
+      Serial.print("Found device ");
+      Serial.println(i, DEC);
+      Serial.println("with address: " + GetAddressToString(devAddr[i]));
+      Serial.println();
+      save_DS18b20_address(GetAddressToString(devAddr[i]), i);
+      ds18b20[i].address = read_DS18b20_address(i);
+    } else {
+      Serial.print("Not Found device");
+      Serial.print(i, DEC);
+      // save_DS18b20_address("", i);
+    }
+    //Get resolution of DS18b20
+    Serial.print("Resolution: ");
+    Serial.print(sensor[i].getResolution( devAddr[i] ));
+    Serial.println();
+
+    //Read temperature from DS18b20
+    float tempC = sensor[i].getTempC( devAddr[i] );
+    Serial.print("Temp C: ");
+    Serial.println(tempC);
+  }
 }

@@ -103,7 +103,6 @@ void setup() {
 
   client.setTimeout(500);
 
-
   if ('1' != char(EEPROM.read(EEPROM_SIZE - 1))) {
     czyszczenieEEPROM();
     first_start();
@@ -111,6 +110,7 @@ void setup() {
   }
 
   supla_board_configuration();
+  SuplaDevice.iterate();
 
   if (drd.detectDoubleReset()) {
     drd.stop();
@@ -650,7 +650,7 @@ void add_Relay_Button_Invert(int relay, int button, int type) {
     type = select_button;
   }
 
-  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true); 
+  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true);
 }
 
 void add_DS18B20Multi_Thermometer(int thermpin) {

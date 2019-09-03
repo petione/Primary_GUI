@@ -153,7 +153,7 @@ String supla_webpage_start(int save) {
   content += MAX_SSID;
   content += "><label>Nazwa sieci</label></i>";
   content += "<i><input name='wifi_pass' ";
-  if (Modul_tryb_konfiguracji == 2) {
+  if (Modul_tryb_konfiguracji == 1 || Modul_tryb_konfiguracji == 2) {
     content += "type='password' value=''";
   }
   else {
@@ -185,7 +185,7 @@ String supla_webpage_start(int save) {
   content += MAX_MLOGIN;
   content += "><label>Login</label></i>";
   content += "<i><input name='modul_pass' ";
-  if (Modul_tryb_konfiguracji == 2) {
+  if (Modul_tryb_konfiguracji == 1 || Modul_tryb_konfiguracji == 2) {
     content += "type='password' value=''";
   }
   else {
@@ -212,7 +212,7 @@ String supla_webpage_start(int save) {
   content += MAX_SUPLA_ID;
   content += "><label>ID Lokalizacji</label></i>";
   content += "<i><input name='supla_pass' ";
-  if (Modul_tryb_konfiguracji == 2) {
+  if (Modul_tryb_konfiguracji == 1 || Modul_tryb_konfiguracji == 2) {
     content += "type='password' value=''";
   }
   else {

@@ -110,7 +110,6 @@ void setup() {
   }
 
   supla_board_configuration();
-  SuplaDevice.iterate();
 
   if (drd.detectDoubleReset()) {
     drd.stop();

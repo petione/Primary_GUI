@@ -493,7 +493,7 @@ double get_temperature(int channelNumber, double last_val) {
 
   int i = channelNumber - channelNumberDS18B20;
   if ( sensor[i].getDeviceCount() > 0 ) {
-    if ( ds18b20[i].address != "FFFFFFFFFFFFFFFF" ) {
+    if ( ds18b20[i].address != "FFFFFFFFFFFFFFFF" || ds18b20[i].type == 0) {
       if ( millis() - ds18b20[i].lastTemperatureRequest < 0) {
         ds18b20[i].lastTemperatureRequest = millis();
       }
@@ -557,6 +557,9 @@ void supla_ds18b20_start(void) {
         if (sensor[i].getAddress(deviceAddress, 0)) {
           ds18b20[i].address = GetAddressToString(deviceAddress);
           memcpy(ds18b20[i].deviceAddress, deviceAddress, sizeof(deviceAddress));
+          Serial.print("Znaleziono DSa adres: ");Serial.println(ds18b20[i].address);
+        } else {
+          Serial.println("Nie znaleziono DSa");
         }
       }
       sensor[i].setResolution(ds18b20[i].deviceAddress, TEMPERATURE_PRECISION);

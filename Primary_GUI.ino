@@ -44,9 +44,9 @@ int nr_ds18b20 = 0;
 int nr_dht = 0;
 
 int dht_channel[MAX_DHT];
-//int ds18x20_channel[MAX_DS18B20];
 _ds18b20_t ds18b20[MAX_DS18B20];
-int relay_button_channel[MAX_RELAY];
+_relay_button_channel relay_button_channel[MAX_RELAY];
+
 
 double temp_html;
 double humidity_html;
@@ -602,14 +602,16 @@ void add_Config(int pin) {
 }
 
 void add_Relay(int relay) {
-  relay_button_channel[nr_relay] = relay;
+  relay_button_channel[nr_relay].relay = relay;
+  relay_button_channel[nr_relay].invert = 0;
   nr_relay++;
   //SuplaDevice.addRelay(relay);
   SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay));
 }
 
 void add_Relay_Invert(int relay) {
-  relay_button_channel[nr_relay] = relay;
+  relay_button_channel[nr_relay].relay = relay;
+  relay_button_channel[nr_relay].invert = 1;
   nr_relay++;
   //SuplaDevice.addRelay(relay, true);
   SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay), true);
@@ -640,7 +642,8 @@ void add_DS18B20_Thermometer(int thermpin) {
 }
 
 void add_Relay_Button(int relay, int button, int type) {
-  relay_button_channel[nr_relay] = relay;
+  relay_button_channel[nr_relay].relay = relay;
+  relay_button_channel[nr_relay].invert = 0;
   nr_button++;
   nr_relay++;
   if (type == CHOICE_TYPE) {
@@ -652,8 +655,8 @@ void add_Relay_Button(int relay, int button, int type) {
 }
 
 void add_Relay_Button_Invert(int relay, int button, int type) {
-  invert = 1;
-  relay_button_channel[nr_relay] = relay;
+  relay_button_channel[nr_relay].relay = relay;
+  relay_button_channel[nr_relay].invert = 1;
   nr_button++;
   nr_relay++;
   if (type == CHOICE_TYPE) {

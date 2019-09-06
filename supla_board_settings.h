@@ -5,12 +5,15 @@
 
 extern int nr_button;
 extern int nr_relay;
-extern int invert;
 extern int nr_ds18b20;
 extern int nr_dht;
 extern int dht_channel[];
-extern int ds18x20_channel[];
-extern int relay_button_channel[];
+
+typedef struct {
+  int relay;
+  int invert;
+} _relay_button_channel;
+extern _relay_button_channel relay_button_channel[];
 
 void supla_board_configuration(void);
 

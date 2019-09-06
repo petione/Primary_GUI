@@ -299,8 +299,8 @@ String supla_webpage_start(int save) {
     }
     if (nr_relay > 0) {
       for (int i = 1; i <= nr_relay; ++i) {
-        byte v = digitalRead(relay_button_channel[i - 1]);
-        if (invert == 1) v ^= 1;
+        byte v = digitalRead(relay_button_channel[i - 1].relay);
+        if (relay_button_channel[i - 1].invert == 1) v ^= 1;
         content += "<i><label ";
         content += ">Przekaźnik ";
         content += i;

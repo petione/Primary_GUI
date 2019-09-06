@@ -397,9 +397,14 @@ void Tryb_konfiguracji() {
   Serial.print("Tryb konfiguracji: ");
   Serial.println(Modul_tryb_konfiguracji);
 
-  WiFi.disconnect();
+  WiFi.softAPdisconnect(true);
   delay(1000);
-  WiFi.mode(WIFI_AP_STA);
+  WiFi.disconnect(true);
+  delay(1000);
+  WiFi.mode(WIFI_AP);
+  //WiFi.disconnect();
+  //delay(1000);
+  //WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(Config_Wifi_name, Config_Wifi_pass);
   delay(1000);
   Serial.println("Tryb AP");

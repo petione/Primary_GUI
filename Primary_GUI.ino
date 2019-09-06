@@ -401,10 +401,8 @@ void Tryb_konfiguracji() {
   delay(1000);
   WiFi.disconnect(true);
   delay(1000);
-  WiFi.mode(WIFI_AP);
-  //WiFi.disconnect();
-  //delay(1000);
-  //WiFi.mode(WIFI_AP_STA);
+  WiFi.mode(WIFI_AP_STA);
+  delay(1000);
   WiFi.softAP(Config_Wifi_name, Config_Wifi_pass);
   delay(1000);
   Serial.println("Tryb AP");

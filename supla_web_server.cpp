@@ -99,11 +99,11 @@ String supla_webpage_search(int save) {
   }
 
   DeviceAddress tempSensor;
-  int numberOfDevices; //Number of temperature devices found
+  int numberOfDevices = 0; //Number of temperature devices found
   content += "<div class='w'>";
   content += "<h3>Znalezione DS18b20</h3>";
   numberOfDevices = sensor[0].getDeviceCount();
-
+  if (numberOfDevices != 0) {
   for (int i = 0; i < nr_ds18b20; i++) {
     // Search the wire for address
     if ( sensor[i].getAddress(tempSensor, i) ) {
@@ -111,6 +111,9 @@ String supla_webpage_search(int save) {
       content += MAX_DS18B20_SIZE;
       content += " readonly><label></i>";
     }
+  }
+  } else {
+    content += "<i><label>brak podłączonych czujników</label></i>";
   }
   content += "</div>";
 
@@ -136,6 +139,8 @@ String supla_webpage_start(int save) {
   }
   else if (save == 2) {
     content += "<div id=\"msg\" class=\"c\">Restart modułu</div>";
+  } else if (save == 3) {
+    content += "<div id=\"msg\" class=\"c\">Dane wymazane - należy zrobić restart urządzenia!!!</div>";
   }
   content += "<script type='text/javascript'>setTimeout(function(){var element =  document.getElementById('msg');if ( element != null ) element.style.visibility = 'hidden';},3200);</script>";
   content += "<div class='s'>";
@@ -331,6 +336,9 @@ String supla_webpage_start(int save) {
   }
   content += "<a href='/firmware_up'><button>Aktualizacja</button></a>";
   content += "<br><br>";
+  content += "<form method='post' action='eeprom'>";
+  content += "<button type='submit'>Wyczyść EEPROM</button></form>";
+  content += "<br>";
   content += "<form method='post' action='reboot'>";
   content += "<button type='submit'>Restart</button></form></div>";
   content += "<br><br>";

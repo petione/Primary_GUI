@@ -13,12 +13,27 @@
 char GUID[SUPLA_GUID_SIZE];
 byte uuidNumber[16]; // UUIDs in binary form are 16 bytes long
 
-void czyszczenieEEPROM(void) {
+void czyszczenieEepromAll(void) {
   EEPROM.begin(EEPROM_SIZE);
   delay(100);
   for (int zmienna_int = 1; zmienna_int < EEPROM_SIZE; ++zmienna_int) {
     EEPROM.write(zmienna_int, 0);
   }
+  EEPROM.end();
+}
+
+void czyszczenieEeprom(void) {
+  EEPROM.begin(EEPROM_SIZE);
+  delay(100);
+  int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME;
+  int stop = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2);
+
+  for (int zmienna_int = 1; zmienna_int < EEPROM_SIZE; ++zmienna_int) {
+    if (zmienna_int < start || zmienna_int > stop) {
+      EEPROM.write(zmienna_int, 0);
+    }
+  }
+  EEPROM.write(EEPROM_SIZE - 1, '2');
   EEPROM.end();
 }
 
@@ -48,12 +63,12 @@ void Pokaz_zawartosc_eeprom() {
     }
     licz_wiersz++;
     if (licz_wiersz >= 0 && licz_wiersz < 32) {
-      ; printf("%02X", eeprom);
+    //  ; printf("%02X", eeprom);
       //Ser_Monitor_SHIFT(("%02X", eeprom)+" ");
       Serial.print(" ");
     }
     if (licz_wiersz == 32) {
-      printf("%02X", eeprom);
+     // printf("%02X", eeprom);
       Serial.print("   |   ");
       Serial.print(eeprom_string);
       Serial.println("   |");
@@ -407,7 +422,7 @@ void save_supla_relay_state(int nr, String save) {
       EEPROM.write(start, save[i]);
     }
     EEPROM.end();
-  }  
+  }
 }
 
 int read_supla_relay_state(int nr) {

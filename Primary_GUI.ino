@@ -104,8 +104,11 @@ void setup() {
 
   client.setTimeout(500);
 
-  if ('1' != char(EEPROM.read(EEPROM_SIZE - 1))) {
-    czyszczenieEEPROM();
+  if ('2' == char(EEPROM.read(EEPROM_SIZE - 1))) {
+    czyszczenieEeprom();
+    first_start();
+  } else if ('1' != char(EEPROM.read(EEPROM_SIZE - 1))) {
+    czyszczenieEepromAll();
     first_start();
     save_guid();
   }
@@ -385,6 +388,14 @@ void createWebServer() {
     }
     httpServer.send(200, "text/html", supla_webpage_search(0));
   });
+  httpServer.on("/eeprom", []() {
+    if (Modul_tryb_konfiguracji == 0) {
+      if (!httpServer.authenticate(www_username, www_password))
+        return httpServer.requestAuthentication();
+    }
+    czyszczenieEeprom();
+    httpServer.send(200, "text/html", supla_webpage_start(3));
+  });
 }
 
 //****************************************************************************************************************************************
@@ -556,7 +567,7 @@ void supla_ds18b20_start(void) {
         if (sensor[i].getAddress(deviceAddress, 0)) {
           ds18b20[i].address = GetAddressToString(deviceAddress);
           memcpy(ds18b20[i].deviceAddress, deviceAddress, sizeof(deviceAddress));
-          Serial.print("Znaleziono DSa adres: ");Serial.println(ds18b20[i].address);
+          Serial.print("Znaleziono DSa adres: "); Serial.println(ds18b20[i].address);
         } else {
           Serial.println("Nie znaleziono DSa");
         }

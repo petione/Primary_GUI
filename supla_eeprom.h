@@ -4,7 +4,8 @@
 #define SUPLA_EEPROM_H
 
 void Pokaz_zawartosc_eeprom();
-void czyszczenieEEPROM(void);
+void czyszczenieEepromAll(void);
+void czyszczenieEeprom(void);
 
 void save_wifi_ssid(String save);
 void save_wifi_pass(String save);
@@ -35,4 +36,3 @@ int read_supla_relay_state(int nr);
 String read_DS18b20_address(int nr);
 
 #endif //SUPLA_EEPROM_H
-

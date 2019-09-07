@@ -102,9 +102,6 @@ void setup() {
   Serial.begin(74880);
   EEPROM.begin(EEPROM_SIZE);
 
-  WiFi.softAPdisconnect(true);
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_STA);
   client.setTimeout(500);
 
   if ('1' != char(EEPROM.read(EEPROM_SIZE - 1))) {
@@ -429,7 +426,6 @@ void WiFi_up() {
     supla_led_blinking(LED_CONFIG_PIN, 500);
     WiFi.disconnect(true);
     WiFi.hostname(String(read_supla_hostname().c_str()));
-    WiFi.softAPdisconnect(true);
     String esid = String(read_wifi_ssid().c_str());
     String epass = String(read_wifi_pass().c_str());
     Serial.println("WiFi init ");

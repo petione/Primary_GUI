@@ -159,8 +159,8 @@ void setup() {
 
 
   SuplaDevice.setStatusFuncImpl(&status_func);
-  SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
-  SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
+ // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
+  //SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
   SuplaDevice.setTimerFuncImpl(&supla_timer);
   SuplaDevice.setName(read_supla_hostname().c_str());
 

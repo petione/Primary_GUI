@@ -78,6 +78,8 @@ void add_DHT22_Thermometer(int thermpin);
 void add_DS18B20_Thermometer(int thermpin);
 void add_Relay_Button(int relay, int button, int type);
 void add_Relay_Button_Invert(int relay, int button, int type);
+void add_Relay_Button(int relay, int button, int type, int DurationMS);
+void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS);
 void add_DS18B20Multi_Thermometer(int thermpin);
 
 double get_temperature(int channelNumber, double last_val);

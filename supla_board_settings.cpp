@@ -29,6 +29,10 @@ void supla_board_configuration(void) {
   add_Relay_Button(13, 0, CHOICE_TYPE);
   //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
+  //  Czas załączenia przekaźnika działa tylko dla przycisku MONOSTABILNEGO
+  //  add_Relay_Button(5, 14, CHOICE_TYPE, 5000);
+  //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE, 5000);  
+
   add_Relay(15);
   //  add_Relay_Invert(5);
 

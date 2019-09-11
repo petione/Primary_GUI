@@ -159,7 +159,7 @@ void setup() {
 
 
   SuplaDevice.setStatusFuncImpl(&status_func);
- // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
+  // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
   //SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
   SuplaDevice.setTimerFuncImpl(&supla_timer);
   SuplaDevice.setName(read_supla_hostname().c_str());
@@ -646,7 +646,16 @@ void add_DS18B20_Thermometer(int thermpin) {
   nr_ds18b20++;
 }
 
+
 void add_Relay_Button(int relay, int button, int type) {
+  return add_Relay_Button(relay, button, type, 0);
+}
+
+void add_Relay_Button_Invert(int relay, int button, int type) {
+  return add_Relay_Button_Invert(relay, button, type, 0);
+}
+
+void add_Relay_Button(int relay, int button, int type, int DurationMS) {
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 0;
   nr_button++;
@@ -656,10 +665,10 @@ void add_Relay_Button(int relay, int button, int type) {
     type = select_button;
   }
 
-  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay));
+  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), DurationMS);
 }
 
-void add_Relay_Button_Invert(int relay, int button, int type) {
+void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 1;
   nr_button++;
@@ -669,7 +678,7 @@ void add_Relay_Button_Invert(int relay, int button, int type) {
     type = select_button;
   }
 
-  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true);
+  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true, DurationMS);
 }
 
 void add_DS18B20Multi_Thermometer(int thermpin) {

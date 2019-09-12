@@ -76,14 +76,14 @@ ETSTimer led_timer;
 // Setup a DHT instance
 //DHT dht(DHTPIN, DHTTYPE);
 DHT dht_sensor[MAX_DHT] = {
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
-  { 0, 0 },
+  { -1, -1 },
+  { -1, -1 },
+  { -1, -1 },
+  { -1, -1 },
+  { -1, -1 },
+  { -1, -1 },
+  { -1, -1 },
+  { -1, -1 },
 };
 
 // Setup a DS18B20 instance

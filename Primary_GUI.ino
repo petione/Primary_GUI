@@ -272,7 +272,7 @@ void supla_timer() {
         Modul_tryb_konfiguracji = 1;
         Tryb_konfiguracji();
       } else if (config_state == LOW && Modul_tryb_konfiguracji == 1) {
-        ESP.reset();
+        resetESP();
       }
     }
   }
@@ -371,7 +371,7 @@ void createWebServer() {
     }
     httpServer.send(200, "text/html", supla_webpage_start(2));
     delay(100);
-    ESP.reset();
+    resetESP();
   });
   httpServer.on("/setup", []() {
     if (Modul_tryb_konfiguracji == 0) {
@@ -737,4 +737,11 @@ void SetupDS18B20Multi() {
     Serial.print("Temp C: ");
     Serial.println(tempC);
   }
+}
+
+void resetESP() {
+  WiFi.forceSleepBegin();
+  wdt_reset();
+  ESP.restart();
+  while (1)wdt_reset();
 }

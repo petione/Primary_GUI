@@ -257,26 +257,7 @@ void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
 }
 
 void supla_timer() {
-
-  //CONFIG ****************************************************************************************************
-  int config_read = digitalRead(CONFIG_PIN);
-  if (config_read != last_config_state) {
-    time_last_config_change = millis();
-  }
-  if ((millis() - time_last_config_change) > config_delay) {
-    if (config_read != config_state) {
-      Serial.println("Triger sate changed");
-      config_state = config_read;
-      if (config_state == LOW && Modul_tryb_konfiguracji != 1) {
-        gui_color = GUI_GREEN;
-        Modul_tryb_konfiguracji = 1;
-        Tryb_konfiguracji();
-      } else if (config_state == LOW && Modul_tryb_konfiguracji == 1) {
-        resetESP();
-      }
-    }
-  }
-  last_config_state = config_read;
+  configBTN();
 }
 
 SuplaDeviceCallbacks supla_arduino_get_callbacks(void) {
@@ -744,4 +725,27 @@ void resetESP() {
   wdt_reset();
   ESP.restart();
   while (1)wdt_reset();
+}
+
+void configBTN() {
+  //CONFIG ****************************************************************************************************
+  int config_read = digitalRead(CONFIG_PIN);
+  if (config_read != last_config_state) {
+    time_last_config_change = millis();
+  }
+  if ((millis() - time_last_config_change) > config_delay) {
+    if (config_read != config_state) {
+      Serial.println("Triger sate changed");
+      config_state = config_read;
+      if (config_state == LOW && Modul_tryb_konfiguracji != 1) {
+        gui_color = GUI_GREEN;
+        Modul_tryb_konfiguracji = 1;
+        Tryb_konfiguracji();
+        client.stop();
+      } else if (config_state == LOW && Modul_tryb_konfiguracji == 1) {
+        resetESP();
+      }
+    }
+  }
+  last_config_state = config_read;
 }

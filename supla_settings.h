@@ -15,7 +15,6 @@
 #define  UPDATE_PATH           "/firmware"
 
 //DHT ****************************************************************************************************
-#define  DHTPIN                0
 #define  DHTTYPE               DHT22
 #define  MAX_DHT               8
 
@@ -41,6 +40,7 @@
 #define  MAX_HOSTNAME        32
 #define  MAX_BUTTON          16
 #define  MAX_RELAY           16
+#define  MAX_RELAY_STATE     16
 #define  MAX_DS18B20_SIZE    16
 
 #define  GUI_BLUE              "#005c96"

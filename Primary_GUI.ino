@@ -157,6 +157,9 @@ void setup() {
   read_guid();
   my_mac_adress();
 
+  String supla_hostname = read_supla_hostname().c_str();
+  supla_hostname.replace(" ", "-");
+  WiFi.hostname(supla_hostname);
 
   SuplaDevice.setStatusFuncImpl(&status_func);
   // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
@@ -417,7 +420,6 @@ void WiFi_up() {
 
     supla_led_blinking(LED_CONFIG_PIN, 500);
     WiFi.disconnect(true);
-    WiFi.hostname(String(read_supla_hostname().c_str()));
     String esid = String(read_wifi_ssid().c_str());
     String epass = String(read_wifi_pass().c_str());
     Serial.println("WiFi init ");

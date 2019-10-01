@@ -2,6 +2,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <EEPROM.h>
+#include <DallasTemperature.h>
 
 #define SUPLADEVICE_CPP
 #include <SuplaDevice.h>
@@ -9,6 +10,7 @@
 #include "ESP8266TrueRandom.h"
 #include "supla_settings.h"
 #include "supla_eeprom.h"
+#include "supla_board_settings.h"
 
 char GUID[SUPLA_GUID_SIZE];
 byte uuidNumber[16]; // UUIDs in binary form are 16 bytes long

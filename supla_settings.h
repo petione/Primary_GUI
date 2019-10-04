@@ -1,4 +1,3 @@
-#include <DallasTemperature.h>
 
 #ifndef SUPLA_SETTINGS_H
 #define SUPLA_SETTINGS_H
@@ -24,7 +23,10 @@
 //LED CONFIG *********************************************************************************************
 #define LED_CONFIG_PIN         2
 //CONFIG PIN *********************************************************************************************
-#define CONFIG_PIN             0 //D3     // triger config
+#define CONFIG_PIN             0
+//WIRE I2C************************************************************************************************
+#define SDA                   4
+#define SCL                   5
 
 //EEPROM *************************************************************************************************
 #define EEPROM_SIZE           4096/4
@@ -48,18 +50,7 @@
 
 #define CHOICE_TYPE  -1
 
-extern DallasTemperature sensor[];
-typedef struct {
-  int pin;
-  int channel;
-  String address;
-  int type; //0-single 1-multi
-  DeviceAddress deviceAddress;
-  long lastTemperatureRequest;
-  bool TemperatureRequestInProgress;
 
-} _ds18b20_t;
-extern _ds18b20_t ds18b20[];
 extern char GUID[SUPLA_GUID_SIZE];
 String read_rssi(void);
 void supla_led_blinking(int led, int time);
@@ -76,6 +67,7 @@ void add_Relay_Invert(int relay);
 void add_DHT11_Thermometer(int thermpin);
 void add_DHT22_Thermometer(int thermpin);
 void add_DS18B20_Thermometer(int thermpin);
+void add_BME280_Sensor();
 void add_Relay_Button(int relay, int button, int type);
 void add_Relay_Button_Invert(int relay, int button, int type);
 void add_Relay_Button(int relay, int button, int type, int DurationMS);
@@ -84,7 +76,8 @@ void add_DS18B20Multi_Thermometer(int thermpin);
 
 double get_temperature(int channelNumber, double last_val);
 void get_temperature_and_humidity(int channelNumber, double *temp, double *humidity);
-String GetAddressToString(DeviceAddress deviceAddress);
+double get_pressure(int channelNumber, double last_val);
+
 extern double temp_html;
 extern double humidity_html;
 #endif //SUPLA_SETTINGS_H

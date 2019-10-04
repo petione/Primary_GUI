@@ -26,14 +26,14 @@ extern "C" {
 
 void supla_board_configuration(void) {
 
-  add_Relay_Button(13, 0, CHOICE_TYPE);
+  // add_Relay_Button(13, 0, CHOICE_TYPE);
   //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
   //  Czas załączenia przekaźnika działa tylko dla przycisku MONOSTABILNEGO
   //  add_Relay_Button(5, 14, CHOICE_TYPE, 5000);
   //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE, 5000);  
 
-  add_Relay(15);
+  //  add_Relay(5);
   //  add_Relay_Invert(5);
 
   //  add_Roller_Shutter_Relays(5, 13) ;
@@ -43,10 +43,12 @@ void supla_board_configuration(void) {
   //  add_Sensor(4);
   //  add_Sensor(16);
 
-  add_DS18B20Multi_Thermometer(5);
-  //  add_DS18B20_Thermometer(2);
-  //  add_DHT11_Thermometer(12);
-  //  add_DHT22_Thermometer(4);
+  // add_DS18B20Multi_Thermometer(4);
+   add_DS18B20_Thermometer(12);
+  // add_DHT11_Thermometer(12);
+  // add_DHT22_Thermometer(4);
+  
+  //add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5
 
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);

@@ -22,8 +22,9 @@ uint8_t mac[WL_MAC_ADDR_LENGTH];
 
 byte Modul_tryb_konfiguracji = 0;
 
-String status_msg = "";
-String old_status_msg = "";
+_supla_status supla_status;
+//supla_status.status_msg = "";
+//supla_status.old_status_msg = "";
 
 
 const char * Supported_Button[2] = {
@@ -76,15 +77,15 @@ String supla_webpage_search(int save) {
   content += "<h1><center>" + String(read_supla_hostname().c_str()) + "</center></h1>";
   content += "<br>";
   content += "<center>";
-  if (nr_ds18b20 > 0) {
+  if (nr_ds18b20_channel > 0) {
     content += "<div class='w'>";
     content += "<h3>Temperatura</h3>";
-    for (int i = 0; i < nr_ds18b20; i++) {
-      double temp = get_temperature(ds18b20[i].channel, 0);
+    for (int i = 0; i < nr_ds18b20_channel; i++) {
+      double temp = get_temperature(ds18b20_channel[i].channel, 0);
 
-      content += "<i><input name='ds18b20_id_";
+      content += "<i><input name='ds18b20_channel_id_";
       content += i;
-      content += "' value='" + String(ds18b20[i].address.c_str()) + "' maxlength=";
+      content += "' value='" + String(ds18b20_channel[i].address.c_str()) + "' maxlength=";
       content += MAX_DS18B20_SIZE;
       content += " readonly><label>";
       if (temp != -275)content += temp;
@@ -92,7 +93,7 @@ String supla_webpage_search(int save) {
       content += " <b>&deg;C</b> ";
       content += "</label>";
       content += "<label style='left:80px'>GPIO: ";
-      content += String(ds18b20[i].pin);
+      content += String(ds18b20_channel[i].pin);
       content += "</label></i>";
     }
     content += "</div>";
@@ -104,7 +105,7 @@ String supla_webpage_search(int save) {
   content += "<h3>Znalezione DS18b20</h3>";
   numberOfDevices = sensor[0].getDeviceCount();
   if (numberOfDevices != 0) {
-    for (int i = 0; i < nr_ds18b20; i++) {
+    for (int i = 0; i < nr_ds18b20_channel; i++) {
       // Search the wire for address
       if ( sensor[i].getAddress(tempSensor, i) ) {
         content += "<i><input value='" + GetAddressToString(tempSensor) + "' length=";
@@ -146,7 +147,7 @@ String supla_webpage_start(int save) {
   content += "<div class='s'>";
   content += getLogoSupla();
   content += "<h1><center>" + String(read_supla_hostname().c_str()) + "</center></h1>";
-  content += "<font size='2'>STATUS: " + status_msg + "</font><br>";
+  content += "<font size='2'>STATUS: " + supla_status.status_msg + "</font><br>";
   content += "<font size='2'>GUID:  " + read_guid() + "</font><br>";
   content += "<font size='2'>MAC:  " + my_mac_adress() + "</font><br>";
   content += "<font size='2'>RSSI: " + read_rssi() + "</font>";
@@ -235,22 +236,22 @@ String supla_webpage_start(int save) {
   content += "<label>Hasło</label></i>";
   content += "</div>";
 
-  if (nr_ds18b20 > 0) {
+  if (nr_ds18b20_channel > 0) {
     content += "<div class='w'>";
     content += "<h3>Temperatura</h3>";
-    for (int i = 0; i < nr_ds18b20; i++) {
-      double temp = get_temperature(ds18b20[i].channel, 0);
-      if (ds18b20[i].type == 1) {
-        content += "<i><input name='ds18b20_id_";
+    for (int i = 0; i < nr_ds18b20_channel; i++) {
+      double temp = get_temperature(ds18b20_channel[i].channel, 0);
+      if (ds18b20_channel[i].type == 1) {
+        content += "<i><input name='ds18b20_channel_id_";
         content += i;
-        content += "' value='" + String(ds18b20[i].address.c_str()) + "' maxlength=";
+        content += "' value='" + String(ds18b20_channel[i].address.c_str()) + "' maxlength=";
         content += MAX_DS18B20_SIZE;
         content += "><label>";
         if (temp != -275)content += temp;
         else content += "--.--";
         content += " <b>&deg;C</b> ";
         content += "</label></i>";
-      } else if (ds18b20[i].type == 0) {
+      } else if (ds18b20_channel[i].type == 0) {
         content += "<i><label>";
         if (temp != -275)content += temp;
         else content += "--.--";
@@ -264,7 +265,7 @@ String supla_webpage_start(int save) {
     content += "<div class='w'>";
     content += "<h3>Temperatura i wilgotność</h3>";
     for (int i = 0; i < nr_dht; i++) {
-      get_temperature_and_humidity(dht_channel[i], &temp_html, &humidity_html);
+      get_temperature_and_humidity(dht_channel[i].channel, &temp_html, &humidity_html);
       content += "<i><label>";
       if (temp_html != -275) content += temp_html;
       else content += "--.--";
@@ -279,8 +280,8 @@ String supla_webpage_start(int save) {
   if (nr_bme > 0 ) {
     content += "<div class='w'>";
     content += "<h3>BME280</h3>";
-    get_temperature_and_humidity(bme_temperature_channel, &temp_html, &humidity_html);
-    double pressure = get_pressure(bme_pressure_channel, 0);
+    get_temperature_and_humidity(bme_channel.temperature_channel, &temp_html, &humidity_html);
+    double pressure = get_pressure(bme_channel.pressure_channel, 0);
 
     content += "<i><label>";
     if (temp_html != -275) content += temp_html;
@@ -349,7 +350,7 @@ String supla_webpage_start(int save) {
   }
   content += "<button type='submit'>Zapisz</button></form>";
   content += "<br>";
-  if (nr_ds18b20 > 0) {
+  if (nr_ds18b20_channel > 0) {
     content += "<a href='/search'><button>Szukaj DS</button></a>";
     content += "<br><br>";
   }
@@ -371,25 +372,25 @@ String my_mac_adress(void) {
 
 void status_func(int status, const char *msg) {
   switch (status) {
-    case 2:  status_msg = "Już zainicjalizowane";              break;
-    case 3:  status_msg = "Nie przypisane CB";                 break;
-    case 4:  status_msg = "Nieprawidłowy identyfikator GUID lub rejestracja urządzeń NIEAKTYWNA";  break;
-    case 5:  status_msg = "Nieznany adres serwera";            break;
-    case 6:  status_msg = "Nieznany identyfikator ID";         break;
-    case 7:  status_msg = "Zainicjowany";                      break;
-    case 8:  status_msg = "Przekroczono limit kanału";         break;
-    case 9:  status_msg = "Rozłączony";                        break;
-    case 10: status_msg = "Rejestracja w toku";                break;
-    case 11: status_msg = "Błąd zmiennej";                     break;
-    case 12: status_msg = "Błąd wersji protokołu";             break;
-    case 13: status_msg = "Złe poświadczenia";                 break;
-    case 14: status_msg = "Tymczasowo niedostępne";            break;
-    case 15: status_msg = "Konflikt lokalizacji";              break;
-    case 16: status_msg = "Konflikt kanałów";                  break;
-    case 17: status_msg = "Zarejestrowany i gotowy";           break;
-    case 18: status_msg = "Urządzenie jest rozłączone";        break;
-    case 19: status_msg = "Lokalizacja jest wyłączona";        break;
-    case 20: status_msg = "Przekroczono limit urządzeń";       break;
+    case 2:  supla_status.status_msg = "Już zainicjalizowane";              break;
+    case 3:  supla_status.status_msg = "Nie przypisane CB";                 break;
+    case 4:  supla_status.status_msg = "Nieprawidłowy identyfikator GUID lub rejestracja urządzeń NIEAKTYWNA";  break;
+    case 5:  supla_status.status_msg = "Nieznany adres serwera";            break;
+    case 6:  supla_status.status_msg = "Nieznany identyfikator ID";         break;
+    case 7:  supla_status.status_msg = "Zainicjowany";                      break;
+    case 8:  supla_status.status_msg = "Przekroczono limit kanału";         break;
+    case 9:  supla_status.status_msg = "Rozłączony";                        break;
+    case 10: supla_status.status_msg = "Rejestracja w toku";                break;
+    case 11: supla_status.status_msg = "Błąd zmiennej";                     break;
+    case 12: supla_status.status_msg = "Błąd wersji protokołu";             break;
+    case 13: supla_status.status_msg = "Złe poświadczenia";                 break;
+    case 14: supla_status.status_msg = "Tymczasowo niedostępne";            break;
+    case 15: supla_status.status_msg = "Konflikt lokalizacji";              break;
+    case 16: supla_status.status_msg = "Konflikt kanałów";                  break;
+    case 17: supla_status.status_msg = "Zarejestrowany i gotowy";           break;
+    case 18: supla_status.status_msg = "Urządzenie jest rozłączone";        break;
+    case 19: supla_status.status_msg = "Lokalizacja jest wyłączona";        break;
+    case 20: supla_status.status_msg = "Przekroczono limit urządzeń";       break;
   }
 
   static int lock;
@@ -402,9 +403,10 @@ void status_func(int status, const char *msg) {
     lock = 1;
   }
 
-  if (old_status_msg != status_msg) {
-    Serial.println(status_msg);
-    old_status_msg = status_msg;
+  if (supla_status.old_status_msg != supla_status.status_msg) {
+    Serial.println(supla_status.status_msg);
+    supla_status.old_status_msg = supla_status.status_msg;
+    supla_status.status = status;
   }
 }
 

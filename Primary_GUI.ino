@@ -31,6 +31,7 @@
 #include "supla_eeprom.h"
 #include "supla_web_server.h"
 #include "supla_board_settings.h"
+#include "supla_oled.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -43,16 +44,14 @@ DoubleResetDetector drd(DRD_TIMEOUT, DRD_ADDRESS);
 int nr_button = 0;
 int nr_relay = 0;
 int invert = 0;
-int nr_ds18b20 = 0;
+int nr_ds18b20_channel = 0;
 int nr_dht = 0;
 int nr_bme = 0;
 
-int bme_temperature_channel;
-int bme_pressure_channel;
-
-int dht_channel[MAX_DHT];
-_ds18b20_t ds18b20[MAX_DS18B20];
+_ds18b20_channel_t ds18b20_channel[MAX_DS18B20];
 _relay_button_channel relay_button_channel[MAX_RELAY];
+_bme_channel bme_channel;
+_dht_channel dht_channel[MAX_DHT];
 
 double temp_html;
 double humidity_html;
@@ -95,7 +94,8 @@ DHT dht_sensor[MAX_DHT] = {
 OneWire ds18x20[MAX_DS18B20] = 0;
 //const int oneWireCount = sizeof(ds18x20) / sizeof(OneWire);
 DallasTemperature sensor[MAX_DS18B20];
-int ds18b20_channel = 0;
+int ds18b20_channel_channel_first = 0;
+int dht_channel_first = 0;
 
 //BME280***************************************************************************************************
 Adafruit_BME280 bme;
@@ -123,6 +123,11 @@ void setup() {
 
   supla_board_configuration();
 
+  supla_ds18b20_channel_start();
+  supla_dht_start();
+  supla_bme_start();
+  supla_oled_start();
+
   if (drd.detectDoubleReset()) {
     drd.stop();
     gui_color = GUI_GREEN;
@@ -133,8 +138,6 @@ void setup() {
 
   delay(5000);
   drd.stop();
-
-
 
   String www_username1 = String(read_login().c_str());
   String www_password1 = String(read_login_pass().c_str());
@@ -168,16 +171,16 @@ void setup() {
   String supla_hostname = read_supla_hostname().c_str();
   supla_hostname.replace(" ", "-");
   WiFi.hostname(supla_hostname);
+  // delete old config
+  WiFi.disconnect(true);
+  delay(1000);
+  WiFi.onEvent(WiFiEvent);
 
   SuplaDevice.setStatusFuncImpl(&status_func);
   // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
   //SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
   SuplaDevice.setTimerFuncImpl(&supla_timer);
   SuplaDevice.setName(read_supla_hostname().c_str());
-
-  supla_ds18b20_start();
-  supla_dht_start();
-  supla_bme_start();
 
   SuplaDevice.begin(GUID,              // Global Unique Identifier
                     mac,               // Ethernet MAC address
@@ -203,11 +206,11 @@ void loop() {
     httpServer.handleClient();
   }
 
-
   if (Modul_tryb_konfiguracji == 0) {
     SuplaDevice.iterate();
   }
 
+  supla_oled_timer();
 }
 //*********************************************************************************************************
 
@@ -228,12 +231,7 @@ int supla_arduino_tcp_write(void *buf, int count) {
 }
 
 bool supla_arduino_svr_connect(const char *server, int port) {
-  if (WiFi.status() == WL_CONNECTED) {
-    WiFi_status();
-    return client.connect(server, 2015);
-  } else {
-    return false;
-  }
+  if (WiFi.status() == WL_CONNECTED) return client.connect(server, 2015); else return false;
 }
 
 bool supla_arduino_svr_connected(void) {
@@ -331,14 +329,14 @@ void createWebServer() {
         save_supla_relay_flag(i, httpServer.arg(relay));
       }
     }
-    if (nr_ds18b20 > 0) {
-      for (int i = 0; i < nr_ds18b20; i++) {
-        if (ds18b20[i].type == 1) {
-          String ds = "ds18b20_id_";
+    if (nr_ds18b20_channel > 0) {
+      for (int i = 0; i < nr_ds18b20_channel; i++) {
+        if (ds18b20_channel[i].type == 1) {
+          String ds = "ds18b20_channel_id_";
           ds += i;
           String address = httpServer.arg(ds);
           save_DS18b20_address(address, i);
-          ds18b20[i].address = address;
+          ds18b20_channel[i].address = address;
           read_DS18b20_address(i);
         }
       }
@@ -413,7 +411,7 @@ void Tryb_konfiguracji() {
   Serial.println("Start Serwera");
 
   if (Modul_tryb_konfiguracji == 2) {
-    supla_ds18b20_start();
+    supla_ds18b20_channel_start();
     supla_dht_start();
 
     while (1) {
@@ -445,20 +443,26 @@ void WiFi_up() {
   }
 }
 
-void WiFi_status() {
-  String esid = String(read_wifi_ssid().c_str());
-  Serial.print("WiFi connected SSID: ");
-  Serial.println(esid);
-  Serial.print("localIP: ");
-  Serial.println(WiFi.localIP());
-  Serial.print("subnetMask: ");
-  Serial.println(WiFi.subnetMask());
-  Serial.print("gatewayIP: ");
-  Serial.println(WiFi.gatewayIP());
-  long rssi = WiFi.RSSI();
-  Serial.print("siła sygnału (RSSI): ");
-  Serial.print(rssi);
-  Serial.println(" dBm");
+void WiFiEvent(WiFiEvent_t event) {
+  switch (event) {
+    case WIFI_EVENT_STAMODE_GOT_IP:
+      //String esid = String(read_wifi_ssid().c_str());
+      Serial.print("WiFi connected SSID: ");
+      Serial.println(String(read_wifi_ssid().c_str()));
+      Serial.print("localIP: ");
+      Serial.println(WiFi.localIP());
+      Serial.print("subnetMask: ");
+      Serial.println(WiFi.subnetMask());
+      Serial.print("gatewayIP: ");
+      Serial.println(WiFi.gatewayIP());
+      Serial.print("siła sygnału (RSSI): ");
+      Serial.print(WiFi.RSSI());
+      Serial.println(" dBm");
+      break;
+    case WIFI_EVENT_STAMODE_DISCONNECTED:
+      Serial.println("WiFi lost connection");
+      break;
+  }
 }
 
 void first_start(void) {
@@ -470,37 +474,52 @@ void first_start(void) {
   save_login(DEFAULT_LOGIN);
   save_login_pass(DEFAULT_PASSWORD);
   save_supla_hostname(DEFAULT_HOSTNAME);
-
 }
 
 String read_rssi(void) {
-  long rssi = WiFi.RSSI();
+  int32_t rssi = WiFi.RSSI();
   return String(rssi) ;
 }
 
+int32_t read_rssi_oled (void) {
+  int32_t rssi = WiFi.RSSI();
+  if (WiFi.status() != WL_CONNECTED) return -1;
+  if (rssi <= -100) return 0;
+  if (rssi >= -50) return 100;
+  return (2 * (rssi + 100) );
+}
+
 void get_temperature_and_humidity(int channelNumber, double * temp, double * humidity) {
-  if  (channelNumber == bme_temperature_channel && nr_bme != 0) {
+  if  (channelNumber == bme_channel.temperature_channel && nr_bme != 0) {
 
     *temp = bme.readTemperature();
     *humidity = bme.readHumidity();
 
+    bme_channel.temp = *temp;
+    bme_channel.humidity = *humidity;
+
   } else {
-    *temp = dht_sensor[channelNumber].readTemperature();
-    *humidity = dht_sensor[channelNumber].readHumidity();
-    //  static uint8_t error;
-    //  Serial.print("get_temperature_and_humidity - "); Serial.print(channelNumber); Serial.print(" -- "); Serial.print(*temp); Serial.print(" -- "); Serial.println(*humidity);
-    if ( isnan(*temp) || isnan(*humidity) ) {
-      *temp = -275;
-      *humidity = -1;
-      //    error++;
+    int i = channelNumber - dht_channel_first;
+    if (dht_channel[i].channel == channelNumber) {
+      *temp = dht_sensor[i].readTemperature();
+      *humidity = dht_sensor[i].readHumidity();
+
+      if ( isnan(*temp) || isnan(*humidity) ) {
+        *temp = -275;
+        *humidity = -1;
+      }
+
+      dht_channel[i].temp = *temp;
+      dht_channel[i].humidity = *humidity;
+      //  Serial.print("get_temperature_and_humidity - "); Serial.print(channelNumber); Serial.print(" -- "); Serial.print(*temp); Serial.print(" -- "); Serial.println(*humidity);
     }
-    //  Serial.print("error - "); Serial.println(error);
   }
 }
 
 double get_pressure(int channelNumber, double last_val) {
   double pressure = -275;
   pressure = bme.readPressure() / 100.0F;
+  bme_channel.pressure = pressure;
   // Serial.print("Pressure = ");
   // Serial.print(bme.readPressure() / 100);
   // Serial.println(" hPa");
@@ -510,29 +529,29 @@ double get_pressure(int channelNumber, double last_val) {
 double get_temperature(int channelNumber, double last_val) {
   double t = -275;
 
-  int i = channelNumber - ds18b20_channel;
+  int i = channelNumber - ds18b20_channel_channel_first;
   if ( sensor[i].getDeviceCount() > 0 ) {
-    if ( ds18b20[i].address == "FFFFFFFFFFFFFFFF" ) return -275;
-    if ( millis() - ds18b20[i].lastTemperatureRequest < 0) {
-      ds18b20[i].lastTemperatureRequest = millis();
+    if ( ds18b20_channel[i].address == "FFFFFFFFFFFFFFFF" ) return -275;
+    if ( millis() - ds18b20_channel[i].lastTemperatureRequest < 0) {
+      ds18b20_channel[i].lastTemperatureRequest = millis();
     }
 
-    if (ds18b20[i].TemperatureRequestInProgress == false) {
-      sensor[i].requestTemperaturesByAddress(ds18b20[i].deviceAddress);
-      ds18b20[i].TemperatureRequestInProgress = true;
+    if (ds18b20_channel[i].TemperatureRequestInProgress == false) {
+      sensor[i].requestTemperaturesByAddress(ds18b20_channel[i].deviceAddress);
+      ds18b20_channel[i].TemperatureRequestInProgress = true;
     }
 
-    if ( millis() - ds18b20[i].lastTemperatureRequest > 1000) {
-      if ( ds18b20[i].type == 0 ) {
+    if ( millis() - ds18b20_channel[i].lastTemperatureRequest > 1000) {
+      if ( ds18b20_channel[i].type == 0 ) {
         sensor[i].requestTemperatures();
         t = sensor[i].getTempCByIndex(0);
       } else {
-        t = sensor[i].getTempC(ds18b20[i].deviceAddress);
+        t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
       }
-
       if (t == -127) t = -275;
-      ds18b20[i].lastTemperatureRequest = millis();
-      ds18b20[i].TemperatureRequestInProgress = false;
+      ds18b20_channel[i].last_val = t;
+      ds18b20_channel[i].lastTemperatureRequest = millis();
+      ds18b20_channel[i].TemperatureRequestInProgress = false;
     }
   }
   return t;
@@ -561,8 +580,8 @@ void supla_led_set(int ledPin) {
   digitalWrite(ledPin, 1);
 }
 
-void supla_ds18b20_start(void) {
-  if (nr_ds18b20 > 0 ) {
+void supla_ds18b20_channel_start(void) {
+  if (nr_ds18b20_channel > 0 ) {
     Serial.println("DS18B2 init");
     Serial.print("Parasite power is: ");
     if ( sensor[0].isParasitePowerMode() ) {
@@ -570,28 +589,17 @@ void supla_ds18b20_start(void) {
     } else {
       Serial.println("OFF");
     }
-    for (int i = 0; i < nr_ds18b20; i++) {
+    for (int i = 0; i < nr_ds18b20_channel; i++) {
       sensor[i].setOneWire(&ds18x20[i]);
       sensor[i].begin();
-
-      /* if (ds18b20[i].type == 0) {
-         DeviceAddress deviceAddress;
-         if (sensor[i].getAddress(deviceAddress, 0)) {
-           ds18b20[i].address = GetAddressToString(deviceAddress);
-           memcpy(ds18b20[i].deviceAddress, deviceAddress, sizeof(deviceAddress));
-           Serial.print("Znaleziono DSa adres: "); Serial.println(ds18b20[i].address);
-         } else {
-           Serial.println("Nie znaleziono DSa");
-         }
-        }*/
-      sensor[i].setResolution(ds18b20[i].deviceAddress, TEMPERATURE_PRECISION);
+      sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
     }
   }
 }
 
 void supla_dht_start(void) {
   if (nr_dht > 0 ) {
-    for (int i = 0; i < MAX_DHT; i++) {
+    for (int i = 0; i < nr_dht; i++) {
       dht_sensor[i].begin();
     }
   }
@@ -648,31 +656,51 @@ void add_Relay_Invert(int relay) {
 
 void add_DHT11_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDHT11();
-  dht_sensor[channel] = { thermpin, DHT11 };
-  dht_channel[nr_dht] = channel;
+  if (nr_dht == 0) dht_channel_first = channel;
+
+  dht_sensor[nr_dht] = { thermpin, DHT11 };
+  dht_channel[nr_dht].channel = channel;
   nr_dht++;
 }
 
 void add_DHT22_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDHT22();
-  dht_sensor[channel] = { thermpin, DHT22 };
-  dht_channel[nr_dht] = channel;
+  if (nr_dht == 0) dht_channel_first = channel;
+
+  dht_sensor[nr_dht] = { thermpin, DHT22 };
+  dht_channel[nr_dht].channel = channel;
   nr_dht++;
 }
 
 void add_DS18B20_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDS18B20Thermometer();
-  ds18b20_channel = channel;
-  ds18x20[nr_ds18b20] = thermpin;
-  ds18b20[nr_ds18b20].pin = thermpin;
-  ds18b20[nr_ds18b20].channel = channel;
-  ds18b20[nr_ds18b20].type = 0;
-  nr_ds18b20++;
+  if (ds18b20_channel_channel_first == 0) ds18b20_channel_channel_first = channel;
+
+  ds18x20[nr_ds18b20_channel] = thermpin;
+  ds18b20_channel[nr_ds18b20_channel].pin = thermpin;
+  ds18b20_channel[nr_ds18b20_channel].channel = channel;
+  ds18b20_channel[nr_ds18b20_channel].type = 0;
+  nr_ds18b20_channel++;
+}
+
+void add_DS18B20Multi_Thermometer(int thermpin) {
+  for (int i = 0; i < MAX_DS18B20; i++) {
+    int channel = SuplaDevice.addDS18B20Thermometer();
+    if (i == 0) ds18b20_channel_channel_first = channel;
+
+    ds18x20[nr_ds18b20_channel] = thermpin;
+    ds18b20_channel[nr_ds18b20_channel].pin = thermpin;
+    ds18b20_channel[nr_ds18b20_channel].channel = channel;
+    ds18b20_channel[nr_ds18b20_channel].type = 1;
+    ds18b20_channel[nr_ds18b20_channel].address = read_DS18b20_address(i);
+    nr_ds18b20_channel++;
+  }
 }
 
 void add_BME280_Sensor() {
-  bme_pressure_channel = SuplaDevice.addPressureSensor();
-  bme_temperature_channel = SuplaDevice.addDHT22();
+  bme_channel.pressure_channel = SuplaDevice.addPressureSensor();
+  bme_channel.temperature_channel = SuplaDevice.addDHT22();
+
   nr_bme++;
 }
 
@@ -710,22 +738,6 @@ void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
   SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true, DurationMS);
 }
 
-void add_DS18B20Multi_Thermometer(int thermpin) {
-  for (int i = 0; i < MAX_DS18B20; i++) {
-    int channel = SuplaDevice.addDS18B20Thermometer();
-    if (i == 0) {
-      ds18b20_channel = channel;
-    }
-
-    ds18x20[nr_ds18b20] = thermpin;
-    ds18b20[nr_ds18b20].pin = thermpin;
-    ds18b20[nr_ds18b20].channel = channel;
-    ds18b20[nr_ds18b20].type = 1;
-    ds18b20[nr_ds18b20].address = read_DS18b20_address(i);
-    nr_ds18b20++;
-  }
-}
-
 //Convert device id to String
 String GetAddressToString(DeviceAddress deviceAddress) {
   String str = "";
@@ -750,7 +762,7 @@ void SetupDS18B20Multi() {
       Serial.println("with address: " + GetAddressToString(devAddr[i]));
       Serial.println();
       save_DS18b20_address(GetAddressToString(devAddr[i]), i);
-      ds18b20[i].address = read_DS18b20_address(i);
+      ds18b20_channel[i].address = read_DS18b20_address(i);
     } else {
       Serial.print("Not Found device");
       Serial.print(i, DEC);

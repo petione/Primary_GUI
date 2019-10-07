@@ -6,14 +6,14 @@
 
 extern int nr_button;
 extern int nr_relay;
-extern int nr_ds18b20;
+extern int nr_ds18b20_channel;
 extern int nr_dht;
 extern int nr_bme;
 
-extern int ds18b20_channel;
-extern int bme_temperature_channel;
-extern int bme_pressure_channel;
-extern int dht_channel[];
+extern int ds18b20_channel_channel_first;
+
+extern const char* Config_Wifi_name;
+extern const char* Config_Wifi_pass;
 
 typedef struct {
   int relay;
@@ -28,11 +28,27 @@ typedef struct {
   String address;
   int type; //0-single 1-multi
   DeviceAddress deviceAddress;
+  double last_val;
   long lastTemperatureRequest;
   bool TemperatureRequestInProgress;
+} _ds18b20_channel_t;
+extern _ds18b20_channel_t ds18b20_channel[];
 
-} _ds18b20_t;
-extern _ds18b20_t ds18b20[];
+typedef struct {
+  int temperature_channel;
+  int pressure_channel;
+  double temp;
+  double humidity;
+  double pressure;
+} _bme_channel;
+extern _bme_channel bme_channel;
+
+typedef struct {
+  int channel;
+  double temp;
+  double humidity;
+} _dht_channel;
+extern _dht_channel dht_channel[];
 
 String GetAddressToString(DeviceAddress deviceAddress);
 void supla_board_configuration(void);

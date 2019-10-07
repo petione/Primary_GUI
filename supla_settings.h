@@ -2,6 +2,9 @@
 #ifndef SUPLA_SETTINGS_H
 #define SUPLA_SETTINGS_H
 
+#include "Arduino.h"
+#define SUPLADEVICE_CPP
+#include <SuplaDevice.h>
 
 #define  SUPLA_DEVICE_NAME     "SUPLA TESTY"
 #define  CONFIG_WIFI_LOGIN     "MODUL SUPLA"
@@ -53,6 +56,7 @@
 
 extern char GUID[SUPLA_GUID_SIZE];
 String read_rssi(void);
+int32_t read_rssi_oled (void);
 void supla_led_blinking(int led, int time);
 void supla_led_blinking_stop(void);
 

@@ -416,7 +416,7 @@ void Tryb_konfiguracji() {
 
     while (1) {
       httpServer.handleClient();
-
+      supla_oled_timer();
       //    SuplaDevice.iterate();
     }
   }

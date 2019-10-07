@@ -195,9 +195,10 @@ void supla_oled_timer() {
   if (millis() - timeSinceLastModeSwitch > DEMO_DURATION) {
     demoMode = (demoMode + 1)  % demoLength;
 
-    if (demoMode < nr_ds18b20_channel / 2)
+    if (demoMode < nr_ds18b20_channel / 2 && nr_ds18b20_channel != 0)
       demoModeDS = (demoModeDS + 1)  % (nr_ds18b20_channel / 2);
-    if (demoMode < (nr_ds18b20_channel / 2) + nr_dht)
+      
+    if (demoMode < (nr_ds18b20_channel / 2) + nr_dht && nr_dht !=0)
       demoModeDHT = (demoModeDHT + 1)  % nr_dht;
 
     timeSinceLastModeSwitch = millis();

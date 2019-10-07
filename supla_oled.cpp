@@ -93,7 +93,7 @@ void display_relay_state(int x, int y) {
   for (int i = 1; i <= nr_relay; ++i) {
     byte v = digitalRead(relay_button_channel[i - 1].relay);
     if (relay_button_channel[i - 1].invert == 1) v ^= 1;
-    if (v) {
+    if (v == 1) {
       display.setColor(WHITE);
       display.fillRect(xx, y+1, 10, 10);
       display.setColor(BLACK);

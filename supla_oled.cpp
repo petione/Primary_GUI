@@ -18,15 +18,16 @@
 //SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  ->supla_settings.h
 SH1106Wire display(0x3c, SDA, SCL);     // ADDRESS, SDA, SCL ->supla_settings.h
 
-#define DEMO_DURATION 3000
-typedef void (*Demo)(void);
+#define FRAME_DURATION 3000
 
-Demo demos[10];
-int demoLength = 0;
+typedef void (*Frame)(void);
+Frame *frames;
+
+int frameCount = 0;
 long timeSinceLastModeSwitch = 0;
-int demoMode = 0;
-int demoModeDS = 0;
-int demoModeDHT = 0;
+int frameMode = 0;
+int frameModeDS = 0;
+int frameModeDHT = 0;
 
 void display_signal(int x, int y) {
   int value = read_rssi_oled();
@@ -37,7 +38,7 @@ void display_signal(int x, int y) {
   if (value == -1) {
 
     display.setFont(ArialMT_Plain_10);
-    display.drawString(x+1, y, "X");
+    display.drawString(x + 1, y, "x");
 
   } else {
     if (value > 0)
@@ -95,12 +96,12 @@ void display_relay_state(int x, int y) {
     if (relay_button_channel[i - 1].invert == 1) v ^= 1;
     if (v == 1) {
       display.setColor(WHITE);
-      display.fillRect(xx, y+1, 10, 10);
+      display.fillRect(xx, y + 1, 10, 10);
       display.setColor(BLACK);
-      display.drawString(xx+2, y, String(i));
+      display.drawString(xx + 2, y, String(i));
     } else {
       display.setColor(WHITE);
-      display.drawString(xx+2, y, String(i));
+      display.drawString(xx + 2, y, String(i));
     }
     xx += 15;
   }
@@ -108,15 +109,21 @@ void display_relay_state(int x, int y) {
 
 void display_temperature() {
   display.setColor(WHITE);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  int y = 0;
-  int val = demoModeDS * 2;
-  for (int i = val; i < val + 2; i++) {
-    display.setFont(ArialMT_Plain_10);
-    display.drawString(y, display.getHeight() / 2 - 10, "CH" + String(i));
+
+  if (nr_ds18b20 > 1) {
+    int y = 0;
+    int val = frameModeDS * 2;
+    for (int i = val; i < val + 2; i++) {
+      display.setFont(ArialMT_Plain_10);
+      display.drawString(y, display.getHeight() / 2 - 10, "CH" + String(i));
+      display.setFont(ArialMT_Plain_16);
+      display.drawString(y, display.getHeight() / 2, String(ds18b20_channel[i].last_val, 1) + "ºC");
+      y += display.getWidth() / 2;
+    }
+  } else {
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.setFont(ArialMT_Plain_16);
-    display.drawString(y, display.getHeight() / 2, String(ds18b20_channel[i].last_val, 1) + "ºC");
-    y += display.getWidth() / 2;
+    display.drawString(display.getWidth() / 2, display.getHeight() / 2, String(ds18b20_channel[0].last_val, 1) + "ºC");
   }
 }
 
@@ -124,9 +131,8 @@ void display_dht() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_16);
-  display.drawString(0, display.getHeight() / 2 - 10 , String(dht_channel[demoModeDHT].temp, 1) + "ºC");
-  display.drawString(display.getWidth() / 2, display.getHeight() / 2 - 10, String(dht_channel[demoModeDHT].humidity, 1) + "%");
-
+  display.drawString(0, display.getHeight() / 2 , String(dht_channel[frameModeDHT].temp, 1) + "ºC");
+  display.drawString(display.getWidth() / 2, display.getHeight() / 2, String(dht_channel[frameModeDHT].humidity, 1) + "%");
 }
 
 void display_bme280() {
@@ -135,7 +141,8 @@ void display_bme280() {
   display.setFont(ArialMT_Plain_16);
   display.drawString(0, display.getHeight() / 2 - 10 , String(bme_channel.temp, 1) + "ºC");
   display.drawString(display.getWidth() / 2, display.getHeight() / 2 - 10, String(bme_channel.humidity, 1) + "%");
-  display.drawString(0, display.getHeight() - 16, String(bme_channel.pressure, 1) + "hPa");
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.drawString(display.getWidth() / 2, display.getHeight() - 16, String(bme_channel.pressure, 1) + "hPa");
 }
 
 void supla_oled_logo() {
@@ -153,22 +160,27 @@ void supla_oled_start() {
 
   supla_oled_logo();
 
-  if (nr_ds18b20_channel > 0) {
-    for (int i = 0; i < (nr_ds18b20_channel / 2); i++) {
-      demos[demoLength] = {display_temperature};
-      demoLength += 1;
+  frames = (Frame*)malloc(sizeof(Frame) * (nr_ds18b20 / 2) + nr_dht + nr_bme);
+  
+  if (nr_ds18b20 > 1) {
+    for (int i = 0; i < (nr_ds18b20 / 2); i++) {
+      frames[frameCount] = {display_temperature};
+      frameCount += 1;
     }
+  } else {
+    frames[frameCount] = {display_temperature};
+    frameCount += 1;
   }
   if (nr_dht > 0) {
     for (int i = 0; i < nr_dht; i++) {
-      demos[demoLength] = {display_dht};
-      demoLength += 1;
+      frames[frameCount] = {display_dht};
+      frameCount += 1;
     }
   }
   if (nr_bme > 0) {
     for (int i = 0; i < nr_bme; i++) {
-      demos[demoLength] = {display_bme280};
-      demoLength += 1;
+      frames[frameCount] = {display_bme280};
+      frameCount += 1;
     }
   }
 }
@@ -188,18 +200,18 @@ void supla_oled_timer() {
     return;
   }
 
-  demos[demoMode]();
+  frames[frameMode]();
 
   display.display();
 
-  if (millis() - timeSinceLastModeSwitch > DEMO_DURATION) {
-    demoMode = (demoMode + 1)  % demoLength;
+  if (millis() - timeSinceLastModeSwitch > FRAME_DURATION) {
+    frameMode = (frameMode + 1)  % frameCount;
 
-    if (demoMode < nr_ds18b20_channel / 2 && nr_ds18b20_channel != 0)
-      demoModeDS = (demoModeDS + 1)  % (nr_ds18b20_channel / 2);
-      
-    if (demoMode < (nr_ds18b20_channel / 2) + nr_dht && nr_dht !=0)
-      demoModeDHT = (demoModeDHT + 1)  % nr_dht;
+    if (frameMode < nr_ds18b20 / 2 && nr_ds18b20 != 0)
+      frameModeDS = (frameModeDS + 1)  % (nr_ds18b20 / 2);
+
+    if (frameMode < (nr_ds18b20 / 2) + nr_dht && nr_dht != 0)
+      frameModeDHT = (frameModeDHT + 1)  % nr_dht;
 
     timeSinceLastModeSwitch = millis();
   }

@@ -44,7 +44,7 @@ DoubleResetDetector drd(DRD_TIMEOUT, DRD_ADDRESS);
 int nr_button = 0;
 int nr_relay = 0;
 int invert = 0;
-int nr_ds18b20_channel = 0;
+int nr_ds18b20 = 0;
 int nr_dht = 0;
 int nr_bme = 0;
 
@@ -94,7 +94,7 @@ DHT dht_sensor[MAX_DHT] = {
 OneWire ds18x20[MAX_DS18B20] = 0;
 //const int oneWireCount = sizeof(ds18x20) / sizeof(OneWire);
 DallasTemperature sensor[MAX_DS18B20];
-int ds18b20_channel_channel_first = 0;
+int ds18b20_channel_first = 0;
 int dht_channel_first = 0;
 
 //BME280***************************************************************************************************
@@ -329,8 +329,8 @@ void createWebServer() {
         save_supla_relay_flag(i, httpServer.arg(relay));
       }
     }
-    if (nr_ds18b20_channel > 0) {
-      for (int i = 0; i < nr_ds18b20_channel; i++) {
+    if (nr_ds18b20 > 0) {
+      for (int i = 0; i < nr_ds18b20; i++) {
         if (ds18b20_channel[i].type == 1) {
           String ds = "ds18b20_channel_id_";
           ds += i;
@@ -529,7 +529,7 @@ double get_pressure(int channelNumber, double last_val) {
 double get_temperature(int channelNumber, double last_val) {
   double t = -275;
 
-  int i = channelNumber - ds18b20_channel_channel_first;
+  int i = channelNumber - ds18b20_channel_first;
   if ( sensor[i].getDeviceCount() > 0 ) {
     if ( ds18b20_channel[i].address == "FFFFFFFFFFFFFFFF" ) return -275;
     if ( millis() - ds18b20_channel[i].lastTemperatureRequest < 0) {
@@ -581,7 +581,7 @@ void supla_led_set(int ledPin) {
 }
 
 void supla_ds18b20_channel_start(void) {
-  if (nr_ds18b20_channel > 0 ) {
+  if (nr_ds18b20 > 0 ) {
     Serial.println("DS18B2 init");
     Serial.print("Parasite power is: ");
     if ( sensor[0].isParasitePowerMode() ) {
@@ -589,10 +589,14 @@ void supla_ds18b20_channel_start(void) {
     } else {
       Serial.println("OFF");
     }
-    for (int i = 0; i < nr_ds18b20_channel; i++) {
+    for (int i = 0; i < nr_ds18b20; i++) {
       sensor[i].setOneWire(&ds18x20[i]);
       sensor[i].begin();
-      sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
+      if (ds18b20_channel[i].type == 1) {
+        sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
+      } else {
+        if (sensor[i].getAddress(ds18b20_channel[i].deviceAddress, 0)) sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
+      }
     }
   }
 }
@@ -674,26 +678,26 @@ void add_DHT22_Thermometer(int thermpin) {
 
 void add_DS18B20_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDS18B20Thermometer();
-  if (ds18b20_channel_channel_first == 0) ds18b20_channel_channel_first = channel;
+  if (ds18b20_channel_first == 0) ds18b20_channel_first = channel;
 
-  ds18x20[nr_ds18b20_channel] = thermpin;
-  ds18b20_channel[nr_ds18b20_channel].pin = thermpin;
-  ds18b20_channel[nr_ds18b20_channel].channel = channel;
-  ds18b20_channel[nr_ds18b20_channel].type = 0;
-  nr_ds18b20_channel++;
+  ds18x20[nr_ds18b20] = thermpin;
+  ds18b20_channel[nr_ds18b20].pin = thermpin;
+  ds18b20_channel[nr_ds18b20].channel = channel;
+  ds18b20_channel[nr_ds18b20].type = 0;
+  nr_ds18b20++;
 }
 
 void add_DS18B20Multi_Thermometer(int thermpin) {
   for (int i = 0; i < MAX_DS18B20; i++) {
     int channel = SuplaDevice.addDS18B20Thermometer();
-    if (i == 0) ds18b20_channel_channel_first = channel;
+    if (i == 0) ds18b20_channel_first = channel;
 
-    ds18x20[nr_ds18b20_channel] = thermpin;
-    ds18b20_channel[nr_ds18b20_channel].pin = thermpin;
-    ds18b20_channel[nr_ds18b20_channel].channel = channel;
-    ds18b20_channel[nr_ds18b20_channel].type = 1;
-    ds18b20_channel[nr_ds18b20_channel].address = read_DS18b20_address(i);
-    nr_ds18b20_channel++;
+    ds18x20[nr_ds18b20] = thermpin;
+    ds18b20_channel[nr_ds18b20].pin = thermpin;
+    ds18b20_channel[nr_ds18b20].channel = channel;
+    ds18b20_channel[nr_ds18b20].type = 1;
+    ds18b20_channel[nr_ds18b20].address = read_DS18b20_address(i);
+    nr_ds18b20++;
   }
 }
 

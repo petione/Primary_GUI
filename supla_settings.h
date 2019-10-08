@@ -21,7 +21,7 @@
 #define  MAX_DHT               8
 
 //DS18B20 ************************************************************************************************
-#define  MAX_DS18B20            4
+#define  MAX_DS18B20            8
 #define  TEMPERATURE_PRECISION  10  // rozdzielczość czujnika DS 9 -12 bit
 //LED CONFIG *********************************************************************************************
 #define LED_CONFIG_PIN         2

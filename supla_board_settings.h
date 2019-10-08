@@ -6,11 +6,11 @@
 
 extern int nr_button;
 extern int nr_relay;
-extern int nr_ds18b20_channel;
+extern int nr_ds18b20;
 extern int nr_dht;
 extern int nr_bme;
 
-extern int ds18b20_channel_channel_first;
+extern int ds18b20_channel_first;
 
 extern const char* Config_Wifi_name;
 extern const char* Config_Wifi_pass;

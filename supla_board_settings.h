@@ -47,6 +47,7 @@ typedef struct {
   int channel;
   double temp;
   double humidity;
+  int frameModeDHT;
 } _dht_channel;
 extern _dht_channel dht_channel[];
 

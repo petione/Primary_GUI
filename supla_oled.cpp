@@ -26,10 +26,14 @@ Frame *frames;
 int frameCount = 0;
 long timeSinceLastModeSwitch = 0;
 int frameMode = 0;
-int frameModeDS = 0;
-int frameModeDHT = 0;
 
-void display_signal(int x, int y) {
+int last_oled_state = HIGH;
+unsigned long time_last_oled_change;
+byte oled_state = 0;
+
+void display_signal() {
+  int x = display.getWidth() - 16;
+  int y = 0;
   int value = read_rssi_oled();
   //clear area only
   display.setColor(BLACK);
@@ -68,7 +72,19 @@ void display_signal(int x, int y) {
     //display.drawString(x+16, y, s.c_str());
   }
 }
-void  display_supla_status(int x, int y) {
+
+void supla_oled_logo() {
+  display.clear();
+  display.drawXbm(10, 17, supla_logo_width, supla_logo_height, supla_logo_bits);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(supla_logo_width + 10, display.getHeight() / 2, "SUPLA");
+  display.display();
+}
+
+void  display_supla_status() {
+  int x = 0;
+  int y = display.getHeight() / 3;
   display.setFont(ArialMT_Plain_10);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setColor(WHITE);
@@ -87,71 +103,128 @@ void  display_config_mode() {
   display.display();
 }
 
-void display_relay_state(int x, int y) {
+void display_relay_state() {
+  int y = 0;
+  int x = 0;
+
   display.setFont(ArialMT_Plain_10);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  int xx = x;
   for (int i = 1; i <= nr_relay; ++i) {
     byte v = digitalRead(relay_button_channel[i - 1].relay);
     if (relay_button_channel[i - 1].invert == 1) v ^= 1;
     if (v == 1) {
       display.setColor(WHITE);
-      display.fillRect(xx, y + 1, 10, 10);
+      display.fillRect(x, y + 1, 10, 10);
       display.setColor(BLACK);
-      display.drawString(xx + 2, y, String(i));
+      display.drawString(x + 2, y, String(i));
     } else {
       display.setColor(WHITE);
-      display.drawString(xx + 2, y, String(i));
+      display.drawString(x + 2, y, String(i));
     }
-    xx += 15;
+    x += 15;
+  }
+  display.setColor(WHITE);
+  display.drawHorizontalLine(0, 14, display.getWidth());
+}
+
+String get_temperature(double temperature) {
+  if (temperature == -275) {
+    return "error";
+  } else {
+    return String(temperature, 1) + "ºC";
+  }
+}
+
+String get_humidity(double humidity) {
+  if (humidity == -1) {
+    return "error";
+  } else {
+    return String(humidity, 1) + "%";
+  }
+}
+
+String get_pressure(double pressure) {
+  if (pressure == -275) {
+    return "error";
+  } else {
+    return String(pressure, 1);
   }
 }
 
 void display_temperature() {
   display.setColor(WHITE);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawXbm(0, display.getHeight() / 2 - 10, temp_width, temp_height, temp_bits);
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(temp_width + 20, display.getHeight() / 2 - 15, "CH" + String(frameMode));
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(temp_width + 10, display.getHeight() / 2, get_temperature(ds18b20_channel[frameMode].last_val));
+}
 
-  if (nr_ds18b20 > 1) {
-    int y = 0;
-    int val = frameModeDS * 2;
-    for (int i = val; i < val + 2; i++) {
-      display.setFont(ArialMT_Plain_10);
-      display.drawString(y, display.getHeight() / 2 - 10, "CH" + String(i));
-      display.setFont(ArialMT_Plain_16);
-      display.drawString(y, display.getHeight() / 2, String(ds18b20_channel[i].last_val, 1) + "ºC");
-      y += display.getWidth() / 2;
+void display_dht_temp() {
+  for (int i = 0; i < nr_dht; i++) {
+    if (dht_channel[i].frameModeDHT == frameMode) {
+      display.setColor(WHITE);
+      display.setTextAlignment(TEXT_ALIGN_LEFT);
+      display.drawXbm(0, display.getHeight() / 2 - 10, temp_width, temp_height, temp_bits);
+      display.setFont(ArialMT_Plain_24);
+      display.drawString(temp_width + 10, display.getHeight() / 2 , get_temperature(dht_channel[i].temp));
     }
-  } else {
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.setFont(ArialMT_Plain_16);
-    display.drawString(display.getWidth() / 2, display.getHeight() / 2, String(ds18b20_channel[0].last_val, 1) + "ºC");
   }
 }
 
-void display_dht() {
-  display.setColor(WHITE);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(0, display.getHeight() / 2 , String(dht_channel[frameModeDHT].temp, 1) + "ºC");
-  display.drawString(display.getWidth() / 2, display.getHeight() / 2, String(dht_channel[frameModeDHT].humidity, 1) + "%");
+void display_dht_humidity() {
+  for (int i = 0; i < nr_dht; i++) {
+    if (dht_channel[i].frameModeDHT == frameMode - 1) {
+      display.setColor(WHITE);
+      display.setTextAlignment(TEXT_ALIGN_LEFT);
+      display.drawXbm(0, display.getHeight() / 2 - 10, humidity_width, humidity_height, humidity_bits);
+      display.setFont(ArialMT_Plain_24);
+      display.drawString(humidity_width + 10, display.getHeight() / 2, get_humidity(dht_channel[i].humidity));
+    }
+  }
 }
 
-void display_bme280() {
+void display_bme280_temp() {
   display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(0, display.getHeight() / 2 - 10 , String(bme_channel.temp, 1) + "ºC");
-  display.drawString(display.getWidth() / 2, display.getHeight() / 2 - 10, String(bme_channel.humidity, 1) + "%");
-  display.setTextAlignment(TEXT_ALIGN_CENTER);
-  display.drawString(display.getWidth() / 2, display.getHeight() - 16, String(bme_channel.pressure, 1) + "hPa");
+  display.drawXbm(0, display.getHeight() / 2 - 10, temp_width, temp_height, temp_bits);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(temp_width + 10 , display.getHeight() / 2 , get_temperature(bme_channel.temp));
 }
 
-void supla_oled_logo() {
-  display.clear();
-  display.drawXbm(34, 14, supla_logo_width, supla_logo_height, supla_logo_bits);
+void display_bme280_humidity() {
+  display.setColor(WHITE);
   display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(supla_logo_width + 40, display.getHeight() / 2, "SUPLA");
-  display.display();
+  display.drawXbm(0, display.getHeight() / 2 - 10, humidity_width, humidity_height, humidity_bits);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(humidity_width + 10, display.getHeight() / 2, get_humidity(bme_channel.humidity));
+}
+
+void display_bme280_pressure() {
+  display.setColor(WHITE);
+  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display.drawXbm(0, display.getHeight() / 2 - 10, pressure_width, pressure_height, pressure_bits);
+  display.setFont(ArialMT_Plain_24);
+  display.drawString(pressure_width + 10, display.getHeight() / 2, get_pressure(bme_channel.pressure));
+}
+
+void button_turn_oled() {
+  int config_read = digitalRead(CONFIG_PIN);
+  if (config_read != last_oled_state) {
+    display.setBrightness(255);
+    frameMode = 0;
+    timeSinceLastModeSwitch = millis();
+
+    oled_state = 0;
+    time_last_oled_change = millis();
+  }
+  if ((millis() - time_last_oled_change) > 20000 && oled_state == 0) {
+    display.setBrightness(50);
+    oled_state = 1;
+  }
+
+  last_oled_state = config_read;
 }
 
 void supla_oled_start() {
@@ -160,58 +233,62 @@ void supla_oled_start() {
 
   supla_oled_logo();
 
-  frames = (Frame*)malloc(sizeof(Frame) * (nr_ds18b20 / 2) + nr_dht + nr_bme);
-  
+  int max_frames = nr_ds18b20 + nr_dht * 2 + nr_bme * 3;
+  frames = (Frame*)malloc(sizeof(Frame) * max_frames);
+
   if (nr_ds18b20 > 1) {
-    for (int i = 0; i < (nr_ds18b20 / 2); i++) {
+    for (int i = 0; i < nr_ds18b20; i++) {
       frames[frameCount] = {display_temperature};
       frameCount += 1;
     }
-  } else {
-    frames[frameCount] = {display_temperature};
-    frameCount += 1;
   }
+
   if (nr_dht > 0) {
     for (int i = 0; i < nr_dht; i++) {
-      frames[frameCount] = {display_dht};
+      dht_channel[i].frameModeDHT = frameCount;
+      frames[frameCount] = {display_dht_temp};
+      frameCount += 1;
+      frames[frameCount] = {display_dht_humidity};
       frameCount += 1;
     }
   }
   if (nr_bme > 0) {
     for (int i = 0; i < nr_bme; i++) {
-      frames[frameCount] = {display_bme280};
+      frames[frameCount] = {display_bme280_temp};
+      frameCount += 1;
+      frames[frameCount] = {display_bme280_humidity};
+      frameCount += 1;
+      frames[frameCount] = {display_bme280_pressure};
       frameCount += 1;
     }
   }
+
 }
 
 void supla_oled_timer() {
+
   display.clear();
-  display_signal(display.getWidth() - 16, 0);
-  display_relay_state(0, 0);
-  display.drawHorizontalLine(0, 14, display.getWidth());
+  display_signal();
+  display_relay_state();
 
   if (Modul_tryb_konfiguracji != 0) {
     display_config_mode();
     return;
   }
   if (supla_status.status != 17) {
-    display_supla_status(0, display.getHeight() / 3);
+    display_supla_status();
+    time_last_oled_change = millis();
+    timeSinceLastModeSwitch = millis();
     return;
   }
-
+  button_turn_oled();
+  
   frames[frameMode]();
 
   display.display();
 
   if (millis() - timeSinceLastModeSwitch > FRAME_DURATION) {
     frameMode = (frameMode + 1)  % frameCount;
-
-    if (frameMode < nr_ds18b20 / 2 && nr_ds18b20 != 0)
-      frameModeDS = (frameModeDS + 1)  % (nr_ds18b20 / 2);
-
-    if (frameMode < (nr_ds18b20 / 2) + nr_dht && nr_dht != 0)
-      frameModeDHT = (frameModeDHT + 1)  % nr_dht;
 
     timeSinceLastModeSwitch = millis();
   }

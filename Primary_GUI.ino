@@ -47,6 +47,7 @@ int invert = 0;
 int nr_ds18b20 = 0;
 int nr_dht = 0;
 int nr_bme = 0;
+int nr_oled = 0;
 
 _ds18b20_channel_t ds18b20_channel[MAX_DS18B20];
 _relay_button_channel relay_button_channel[MAX_RELAY];
@@ -126,7 +127,6 @@ void setup() {
   supla_ds18b20_channel_start();
   supla_dht_start();
   supla_bme_start();
-  supla_oled_start();
 
   if (drd.detectDoubleReset()) {
     drd.stop();
@@ -740,6 +740,11 @@ void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
   }
 
   SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true, DurationMS);
+}
+
+void add_Oled() {
+  supla_oled_start();
+  nr_oled ++;
 }
 
 //Convert device id to String

@@ -13,119 +13,135 @@
 //#include "SSD1306Wire.h"        // legacy: #include "SSD1306.h"
 #include "SH1106Wire.h"   // legacy: #include "SH1106.h"
 
-
 // Initialize the OLED display using Arduino Wire:
 //SSD1306Wire display(0x3c, SDA, SCL);   // ADDRESS, SDA, SCL  ->supla_settings.h
 SH1106Wire display(0x3c, SDA, SCL);     // ADDRESS, SDA, SCL ->supla_settings.h
 
-#define FRAME_DURATION 3000
+// Include the UI lib
+#include "OLEDDisplayUi.h"
+OLEDDisplayUi ui     ( &display );
 
-typedef void (*Frame)(void);
-Frame *frames;
+#define FRAME_DURATION 5000
+
+FrameCallback  *frames;
 
 int frameCount = 0;
-long timeSinceLastModeSwitch = 0;
-int frameMode = 0;
+long timeLastSwitchDHT = 0;
+int dht_val = -1;
 
 int last_oled_state = HIGH;
 unsigned long time_last_oled_change;
 byte oled_state = 0;
+int max_frames;
 
-void display_signal() {
-  int x = display.getWidth() - 16;
+void supla_oled_logo(OLEDDisplay *display) {
+  display->clear();
+  display->drawXbm(10, 17, supla_logo_width, supla_logo_height, supla_logo_bits);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(supla_logo_width + 10, display->getHeight() / 2, "SUPLA");
+  display->display();
+}
+
+void display_signal(OLEDDisplay *display) {
+  int x = display->getWidth() - 16;
   int y = 0;
   int value = read_rssi_oled();
   //clear area only
-  display.setColor(BLACK);
-  display.fillRect(x, y, x + 46, 16);
-  display.setColor(WHITE);
+  display->setColor(BLACK);
+  display->fillRect(x, y, x + 46, 16);
+  display->setColor(WHITE);
   if (value == -1) {
 
-    display.setFont(ArialMT_Plain_10);
-    display.drawString(x + 1, y, "x");
+    display->setFont(ArialMT_Plain_10);
+    display->drawString(x + 1, y, "x");
 
   } else {
     if (value > 0)
-      display.fillRect(x, y + 6, 3, 4);
+      display->fillRect(x, y + 6, 3, 4);
     else
-      display.drawRect(x, y + 6, 3, 4);
+      display->drawRect(x, y + 6, 3, 4);
 
     if (value >= 25)
-      display.fillRect(x + 4, y + 4, 3, 6);
+      display->fillRect(x + 4, y + 4, 3, 6);
     else
-      display.drawRect(x + 4, y + 4, 3, 6);
+      display->drawRect(x + 4, y + 4, 3, 6);
 
     if (value >= 50)
-      display.fillRect(x + 8, y + 2, 3, 8);
+      display->fillRect(x + 8, y + 2, 3, 8);
     else
-      display.drawRect(x + 8, y + 2, 3, 8);
+      display->drawRect(x + 8, y + 2, 3, 8);
 
     if (value >= 75)
-      display.fillRect(x + 12, y, 3, 10);
+      display->fillRect(x + 12, y, 3, 10);
     else
-      display.drawRect(x + 12, y, 3, 10);
+      display->drawRect(x + 12, y, 3, 10);
 
     //String s = String(value);
     // s+="%";
     //set current font size
-    //display.setFont(ArialMT_Plain_10);
-    //display.drawString(x+16, y, s.c_str());
+    //display->setFont(ArialMT_Plain_10);
+    //display->drawString(x+16, y, s.c_str());
   }
 }
 
-void supla_oled_logo() {
-  display.clear();
-  display.drawXbm(10, 17, supla_logo_width, supla_logo_height, supla_logo_bits);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(supla_logo_width + 10, display.getHeight() / 2, "SUPLA");
-  display.display();
-}
-
-void  display_supla_status() {
-  int x = 0;
-  int y = display.getHeight() / 3;
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setColor(WHITE);
-  display.drawStringMaxWidth(x, y, display.getWidth(), String(supla_status.status_msg));
-  display.display();
-}
-
-void  display_config_mode() {
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.setColor(WHITE);
-  display.drawString(0, 15, "Tryb konfiguracyjny: " + String(Modul_tryb_konfiguracji));
-  display.drawString(0, 28, "AP name: " + String(Config_Wifi_name));
-  display.drawString(0, 41, "AP pass: "  + String(Config_Wifi_pass));
-  display.drawString(0, 54, "IP: 192.168.4.1");
-  display.display();
-}
-
-void display_relay_state() {
+void display_relay_state(OLEDDisplay *display) {
   int y = 0;
   int x = 0;
 
-  display.setFont(ArialMT_Plain_10);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(ArialMT_Plain_10);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
   for (int i = 1; i <= nr_relay; ++i) {
     byte v = digitalRead(relay_button_channel[i - 1].relay);
     if (relay_button_channel[i - 1].invert == 1) v ^= 1;
     if (v == 1) {
-      display.setColor(WHITE);
-      display.fillRect(x, y + 1, 10, 10);
-      display.setColor(BLACK);
-      display.drawString(x + 2, y, String(i));
+      display->setColor(WHITE);
+      display->fillRect(x, y + 1, 10, 10);
+      display->setColor(BLACK);
+      display->drawString(x + 2, y, String(i));
     } else {
-      display.setColor(WHITE);
-      display.drawString(x + 2, y, String(i));
+      display->setColor(WHITE);
+      display->drawString(x + 2, y, String(i));
     }
     x += 15;
   }
-  display.setColor(WHITE);
-  display.drawHorizontalLine(0, 14, display.getWidth());
+  display->setColor(WHITE);
+  display->drawHorizontalLine(0, 14, display->getWidth());
 }
+
+void msOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
+  display_signal(display);
+  if (nr_relay > 0) {
+    display_relay_state(display);
+  }
+}
+
+void  display_supla_status(OLEDDisplay *display) {
+  int x = 0;
+  int y = display->getHeight() / 3;
+  display->clear();
+
+  display_signal(display);
+
+  display->setFont(ArialMT_Plain_10);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setColor(WHITE);
+  display->drawStringMaxWidth(x, y, display->getWidth(), String(supla_status.status_msg));
+  display->display();
+}
+
+void  display_config_mode(OLEDDisplay *display) {
+  display->clear();
+  display->setFont(ArialMT_Plain_10);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setColor(WHITE);
+  display->drawString(0, 15, "Tryb konfiguracyjny: " + String(Modul_tryb_konfiguracji));
+  display->drawString(0, 28, "AP name: " + String(Config_Wifi_name));
+  display->drawString(0, 41, "AP pass: "  + String(Config_Wifi_pass));
+  display->drawString(0, 54, "IP: 192.168.4.1");
+  display->display();
+}
+
 
 String get_temperature(double temperature) {
   if (temperature == -275) {
@@ -151,75 +167,87 @@ String get_pressure(double pressure) {
   }
 }
 
-void display_temperature() {
-  display.setColor(WHITE);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawXbm(0, display.getHeight() / 2 - 10, temp_width, temp_height, temp_bits);
-  display.setFont(ArialMT_Plain_10);
-  display.drawString(temp_width + 20, display.getHeight() / 2 - 15, "CH" + String(frameMode));
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(temp_width + 10, display.getHeight() / 2, get_temperature(ds18b20_channel[frameMode].last_val));
+void display_temperature(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  int drawHeightIcon = display->getHeight() / 2 - 10;
+  int drawStringIcon = display->getHeight() / 2 - 5;
+
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawXbm(x + 0, y + drawHeightIcon, temp_width, temp_height, temp_bits);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(x + temp_width + 20, y + display->getHeight() / 2 - 15, "CH" + String(state->currentFrame));
+  display->setFont(ArialMT_Plain_24);
+  display->drawString(x + temp_width + 10, y + drawStringIcon, get_temperature(ds18b20_channel[state->currentFrame].last_val));
 }
 
-void display_dht_temp() {
-  for (int i = 0; i < nr_dht; i++) {
-    if (dht_channel[i].frameModeDHT == frameMode) {
-      display.setColor(WHITE);
-      display.setTextAlignment(TEXT_ALIGN_LEFT);
-      display.drawXbm(0, display.getHeight() / 2 - 10, temp_width, temp_height, temp_bits);
-      display.setFont(ArialMT_Plain_24);
-      display.drawString(temp_width + 10, display.getHeight() / 2 , get_temperature(dht_channel[i].temp));
-    }
+void display_dht_temp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  int drawHeightIcon = display->getHeight() / 2 - 10;
+  int drawStringIcon = display->getHeight() / 2 - 5;
+  if (millis() - timeLastSwitchDHT > FRAME_DURATION) {
+    dht_val++;
+    if (dht_val >= nr_dht) dht_val = 0;
+    timeLastSwitchDHT = millis();
   }
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawXbm(x + 0, y + drawHeightIcon, temp_width, temp_height, temp_bits);
+  display->setFont(ArialMT_Plain_24);
+  display->drawString(x + temp_width + 10, y + drawStringIcon , get_temperature(dht_channel[dht_val].temp));
 }
 
-void display_dht_humidity() {
-  for (int i = 0; i < nr_dht; i++) {
-    if (dht_channel[i].frameModeDHT == frameMode - 1) {
-      display.setColor(WHITE);
-      display.setTextAlignment(TEXT_ALIGN_LEFT);
-      display.drawXbm(0, display.getHeight() / 2 - 10, humidity_width, humidity_height, humidity_bits);
-      display.setFont(ArialMT_Plain_24);
-      display.drawString(humidity_width + 10, display.getHeight() / 2, get_humidity(dht_channel[i].humidity));
-    }
-  }
+void display_dht_humidity(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  int drawHeightIcon = display->getHeight() / 2 - 10;
+  int drawStringIcon = display->getHeight() / 2 - 5;
+
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawXbm(x + 0, y + drawHeightIcon, humidity_width, humidity_height, humidity_bits);
+  display->setFont(ArialMT_Plain_24);
+  display->drawString(x + humidity_width + 10, y + drawStringIcon, get_humidity(dht_channel[dht_val].humidity));
 }
 
-void display_bme280_temp() {
-  display.setColor(WHITE);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawXbm(0, display.getHeight() / 2 - 10, temp_width, temp_height, temp_bits);
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(temp_width + 10 , display.getHeight() / 2 , get_temperature(bme_channel.temp));
+void display_bme280_temp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  int drawHeightIcon = display->getHeight() / 2 - 10;
+  int drawStringIcon = display->getHeight() / 2 - 5;
+
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawXbm(x + 0, y + drawHeightIcon, temp_width, temp_height, temp_bits);
+  display->setFont(ArialMT_Plain_24);
+  display->drawString(x + temp_width + 10 , y + drawStringIcon , get_temperature(bme_channel.temp));
 }
 
-void display_bme280_humidity() {
-  display.setColor(WHITE);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawXbm(0, display.getHeight() / 2 - 10, humidity_width, humidity_height, humidity_bits);
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(humidity_width + 10, display.getHeight() / 2, get_humidity(bme_channel.humidity));
+void display_bme280_humidity(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  int drawHeightIcon = display->getHeight() / 2 - 10;
+  int drawStringIcon = display->getHeight() / 2 - 5;
+
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawXbm(x + 0, y + drawHeightIcon, humidity_width, humidity_height, humidity_bits);
+  display->setFont(ArialMT_Plain_24);
+  display->drawString(x + humidity_width + 10, y + drawStringIcon, get_humidity(bme_channel.humidity));
 }
 
-void display_bme280_pressure() {
-  display.setColor(WHITE);
-  display.setTextAlignment(TEXT_ALIGN_LEFT);
-  display.drawXbm(0, display.getHeight() / 2 - 10, pressure_width, pressure_height, pressure_bits);
-  display.setFont(ArialMT_Plain_24);
-  display.drawString(pressure_width + 10, display.getHeight() / 2, get_pressure(bme_channel.pressure));
+void display_bme280_pressure(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+  int drawHeightIcon = display->getHeight() / 2 - 10;
+  int drawStringIcon = display->getHeight() / 2 - 5;
+
+  display->setColor(WHITE);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawXbm(x + 0, y + drawHeightIcon, pressure_width, pressure_height, pressure_bits);
+  display->setFont(ArialMT_Plain_24);
+  display->drawString(x + pressure_width + 10, y + drawStringIcon, get_pressure(bme_channel.pressure));
 }
 
 void button_turn_oled() {
   int config_read = digitalRead(CONFIG_PIN);
   if (config_read != last_oled_state) {
     display.setBrightness(255);
-    frameMode = 0;
-    timeSinceLastModeSwitch = millis();
 
     oled_state = 0;
     time_last_oled_change = millis();
   }
-  if ((millis() - time_last_oled_change) > 20000 && oled_state == 0) {
+  if ((millis() - time_last_oled_change) > (max_frames * 10000) && oled_state == 0) {
     display.setBrightness(50);
     oled_state = 1;
   }
@@ -227,17 +255,22 @@ void button_turn_oled() {
   last_oled_state = config_read;
 }
 
+OverlayCallback overlays[] = { msOverlay };
+int overlaysCount = 1;
+
 void supla_oled_start() {
-  display.init();
-  display.flipScreenVertically();
 
-  supla_oled_logo();
+  int nr_ds18b20_pom = 0;
 
-  int max_frames = nr_ds18b20 + nr_dht * 2 + nr_bme * 3;
-  frames = (Frame*)malloc(sizeof(Frame) * max_frames);
+  for (int i = 0; i < nr_ds18b20; i++) {
+    if ( ds18b20_channel[i].address != "FFFFFFFFFFFFFFFF" ) nr_ds18b20_pom++;
+  }
+
+  max_frames = nr_ds18b20_pom + nr_dht * 2 + nr_bme * 3;
+  frames = (FrameCallback*)malloc(sizeof(FrameCallback) * max_frames);
 
   if (nr_ds18b20 > 1) {
-    for (int i = 0; i < nr_ds18b20; i++) {
+    for (int i = 0; i < nr_ds18b20_pom; i++) {
       frames[frameCount] = {display_temperature};
       frameCount += 1;
     }
@@ -245,7 +278,6 @@ void supla_oled_start() {
 
   if (nr_dht > 0) {
     for (int i = 0; i < nr_dht; i++) {
-      dht_channel[i].frameModeDHT = frameCount;
       frames[frameCount] = {display_dht_temp};
       frameCount += 1;
       frames[frameCount] = {display_dht_humidity};
@@ -263,33 +295,42 @@ void supla_oled_start() {
     }
   }
 
+  ui.setTargetFPS(60);
+  ui.setActiveSymbol(activeSymbol);
+  ui.setInactiveSymbol(inactiveSymbol);
+  ui.setIndicatorPosition(BOTTOM);
+  ui.setIndicatorDirection(LEFT_RIGHT);
+  ui.setFrameAnimation(SLIDE_LEFT);
+  ui.setFrames(frames, frameCount);
+  ui.setOverlays(overlays, overlaysCount);
+  ui.setTimePerFrame(5000);
+  ui.init();
+
+  display.flipScreenVertically();
+  supla_oled_logo(&display);
 }
 
 void supla_oled_timer() {
 
-  display.clear();
-  display_signal();
-  display_relay_state();
+  if (nr_oled > 0) {
+    if (Modul_tryb_konfiguracji != 0) {
+      display_config_mode(&display);
+      return;
+    }
+    if (supla_status.status != 17) {
+      display_supla_status(&display);
+      time_last_oled_change = millis();
+      return;
+    }
+    button_turn_oled();
 
-  if (Modul_tryb_konfiguracji != 0) {
-    display_config_mode();
-    return;
-  }
-  if (supla_status.status != 17) {
-    display_supla_status();
-    time_last_oled_change = millis();
-    timeSinceLastModeSwitch = millis();
-    return;
-  }
-  button_turn_oled();
-  
-  frames[frameMode]();
+    int remainingTimeBudget = ui.update();
 
-  display.display();
-
-  if (millis() - timeSinceLastModeSwitch > FRAME_DURATION) {
-    frameMode = (frameMode + 1)  % frameCount;
-
-    timeSinceLastModeSwitch = millis();
+    if (remainingTimeBudget > 0) {
+      // You can do some work here
+      // Don't do stuff if you are below your
+      // time budget.
+      delay(remainingTimeBudget);
+    }
   }
 }

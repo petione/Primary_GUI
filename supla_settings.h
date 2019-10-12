@@ -21,7 +21,7 @@
 #define  MAX_DHT               8
 
 //DS18B20 ************************************************************************************************
-#define  MAX_DS18B20            8
+#define  MAX_DS18B20            3
 #define  TEMPERATURE_PRECISION  10  // rozdzielczość czujnika DS 9 -12 bit
 //LED CONFIG *********************************************************************************************
 #define LED_CONFIG_PIN         2
@@ -77,6 +77,7 @@ void add_Relay_Button_Invert(int relay, int button, int type);
 void add_Relay_Button(int relay, int button, int type, int DurationMS);
 void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS);
 void add_DS18B20Multi_Thermometer(int thermpin);
+void add_Oled();
 
 double get_temperature(int channelNumber, double last_val);
 void get_temperature_and_humidity(int channelNumber, double *temp, double *humidity);

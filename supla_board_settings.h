@@ -9,6 +9,7 @@ extern int nr_relay;
 extern int nr_ds18b20;
 extern int nr_dht;
 extern int nr_bme;
+extern int nr_oled;
 
 extern int ds18b20_channel_first;
 
@@ -47,7 +48,6 @@ typedef struct {
   int channel;
   double temp;
   double humidity;
-  int frameModeDHT;
 } _dht_channel;
 extern _dht_channel dht_channel[];
 

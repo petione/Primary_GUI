@@ -255,6 +255,13 @@ void button_turn_oled() {
   last_oled_state = config_read;
 }
 
+void turn_oled() {
+  if (oled_state == 1) {
+    display.setBrightness(255);
+    oled_state = 0;
+  }
+}
+
 OverlayCallback overlays[] = { msOverlay };
 int overlaysCount = 1;
 
@@ -314,10 +321,12 @@ void supla_oled_timer() {
 
   if (nr_oled > 0) {
     if (Modul_tryb_konfiguracji != 0) {
+      turn_oled();
       display_config_mode(&display);
       return;
     }
     if (supla_status.status != 17) {
+      turn_oled();
       display_supla_status(&display);
       time_last_oled_change = millis();
       return;

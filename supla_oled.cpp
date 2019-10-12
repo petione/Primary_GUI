@@ -318,7 +318,6 @@ void supla_oled_timer() {
       return;
     }
     if (supla_status.status != 17) {
-      display.setBrightness(255);
       display_supla_status(&display);
       time_last_oled_change = millis();
       return;

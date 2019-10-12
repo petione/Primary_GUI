@@ -247,7 +247,7 @@ void button_turn_oled() {
     oled_state = 0;
     time_last_oled_change = millis();
   }
-  if ((millis() - time_last_oled_change) > (max_frames * 10000) && oled_state == 0) {
+  if ((millis() - time_last_oled_change) > (max_frames * 5000) && oled_state == 0) {
     display.setBrightness(50);
     oled_state = 1;
   }
@@ -318,6 +318,7 @@ void supla_oled_timer() {
       return;
     }
     if (supla_status.status != 17) {
+      display.setBrightness(255);
       display_supla_status(&display);
       time_last_oled_change = millis();
       return;

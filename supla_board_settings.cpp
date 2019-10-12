@@ -48,7 +48,9 @@ void supla_board_configuration(void) {
   // add_DHT11_Thermometer(12);
   // add_DHT22_Thermometer(4);
   
-  //add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5
+  //  add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+
+  add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
 
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);

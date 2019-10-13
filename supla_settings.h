@@ -47,6 +47,8 @@
 #define  MAX_RELAY           16
 #define  MAX_RELAY_STATE     16
 #define  MAX_DS18B20_SIZE    16
+#define  MAX_DS18B20_NAME    8
+
 
 #define  GUI_BLUE              "#005c96"
 #define  GUI_GREEN             "#00D151"

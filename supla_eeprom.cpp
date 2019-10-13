@@ -65,12 +65,12 @@ void Pokaz_zawartosc_eeprom() {
     }
     licz_wiersz++;
     if (licz_wiersz >= 0 && licz_wiersz < 32) {
-    //  ; printf("%02X", eeprom);
+      //  ; printf("%02X", eeprom);
       //Ser_Monitor_SHIFT(("%02X", eeprom)+" ");
       Serial.print(" ");
     }
     if (licz_wiersz == 32) {
-     // printf("%02X", eeprom);
+      // printf("%02X", eeprom);
       Serial.print("   |   ");
       Serial.print(eeprom_string);
       Serial.println("   |");
@@ -475,5 +475,34 @@ String read_DS18b20_address(int nr) {
     memcpy(ds18b20_channel[nr].deviceAddress, deviceAddress, sizeof(deviceAddress));
     EEPROM.end();
   }
+  return read_eeprom;
+}
+
+void save_DS18b20_name(String save, int nr) {
+  int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY +  MAX_RELAY_STATE + (MAX_DS18B20_SIZE * MAX_DS18B20) + (MAX_DS18B20_NAME * nr);
+  int koniec = start + MAX_DS18B20_NAME ;
+  int len = save.length();
+
+  EEPROM.begin(EEPROM_SIZE);
+  for (int i = 0; i < len; ++i) {
+    EEPROM.write(start + i, save[i]);
+  }
+  for (int i = start + len; i < koniec; ++i) {
+    EEPROM.write(i, 0);
+  }
+  EEPROM.end();
+}
+
+String read_DS18b20_name(int nr) {
+  String read_eeprom = "";
+  int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY +  MAX_RELAY_STATE + (MAX_DS18B20_SIZE * MAX_DS18B20) + (MAX_DS18B20_NAME * nr);
+  int koniec = start + MAX_DS18B20_NAME ;
+
+  EEPROM.begin(EEPROM_SIZE);
+  delay(100);
+  for (int i = start; i < koniec; ++i) {
+    read_eeprom += char(EEPROM.read(i));
+  }
+  EEPROM.end();
   return read_eeprom;
 }

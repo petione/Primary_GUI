@@ -332,9 +332,15 @@ void createWebServer() {
     if (nr_ds18b20 > 0) {
       for (int i = 0; i < nr_ds18b20; i++) {
         if (ds18b20_channel[i].type == 1) {
-          String ds = "ds18b20_channel_id_";
-          ds += i;
-          String address = httpServer.arg(ds);
+          String ds_name = "ds18b20_name_id_";
+          ds_name += i;
+          String name = httpServer.arg(ds_name);
+          save_DS18b20_name(name, i);
+          ds18b20_channel[i].name = name;
+
+          String ds_address = "ds18b20_channel_id_";
+          ds_address += i;
+          String address = httpServer.arg(ds_address);
           save_DS18b20_address(address, i);
           ds18b20_channel[i].address = address;
           read_DS18b20_address(i);
@@ -697,6 +703,7 @@ void add_DS18B20Multi_Thermometer(int thermpin) {
     ds18b20_channel[nr_ds18b20].channel = channel;
     ds18b20_channel[nr_ds18b20].type = 1;
     ds18b20_channel[nr_ds18b20].address = read_DS18b20_address(i);
+    ds18b20_channel[nr_ds18b20].name = read_DS18b20_name(i);
     nr_ds18b20++;
   }
 }

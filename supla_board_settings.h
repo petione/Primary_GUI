@@ -27,6 +27,7 @@ typedef struct {
   int pin;
   int channel;
   String address;
+  String name;
   int type; //0-single 1-multi
   DeviceAddress deviceAddress;
   double last_val;

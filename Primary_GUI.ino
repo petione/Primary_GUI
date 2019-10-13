@@ -398,13 +398,13 @@ void Tryb_konfiguracji() {
   Serial.println(Modul_tryb_konfiguracji);
 
   WiFi.softAPdisconnect(true);
-  delay(1000);
+  delay(100);
   WiFi.disconnect(true);
-  delay(1000);
+  delay(100);
   WiFi.mode(WIFI_AP_STA);
-  delay(1000);
+  delay(100);
   WiFi.softAP(Config_Wifi_name, Config_Wifi_pass);
-  delay(1000);
+  delay(100);
   Serial.println("Tryb AP");
   createWebServer();
   httpServer.begin();

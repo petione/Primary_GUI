@@ -273,7 +273,6 @@ void button_turn_oled() {
 
     oled_state = 0;
     time_last_oled_change = millis();
-    last_oled_state = config_read;
   }
 
   if ((millis() - time_last_oled_change) > (max_frames * 5000) && oled_state == 0) {
@@ -281,6 +280,7 @@ void button_turn_oled() {
     //display.displayOff();
     oled_state = 1;
   }
+  last_oled_state = config_read;
 }
 
 void turn_oled() {
@@ -356,7 +356,6 @@ void supla_oled_timer() {
 
   if (nr_oled > 0) {
     if (Modul_tryb_konfiguracji != 0) {
-      turn_oled();
       display_config_mode(&display);
       return;
     }

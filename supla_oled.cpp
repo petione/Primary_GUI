@@ -147,7 +147,7 @@ String get_temperature(double temperature) {
   if (temperature == -275) {
     return "error";
   } else {
-    return String(temperature, 1) + "ºC";
+    return String(temperature, 1);
   }
 }
 
@@ -155,7 +155,7 @@ String get_humidity(double humidity) {
   if (humidity == -1) {
     return "error";
   } else {
-    return String(humidity, 1) + "%";
+    return String(humidity, 1);
   }
 }
 
@@ -163,7 +163,7 @@ String get_pressure(double pressure) {
   if (pressure == -275) {
     return "error";
   } else {
-    return String(pressure, 1);
+    return String(pressure, 0);
   }
 }
 
@@ -177,7 +177,10 @@ void display_temperature(OLEDDisplay *display, OLEDDisplayUiState* state, int16_
   display->setFont(ArialMT_Plain_10);
   display->drawString(x + temp_width + 20, y + display->getHeight() / 2 - 15, "CH" + String(state->currentFrame));
   display->setFont(ArialMT_Plain_24);
-  display->drawString(x + temp_width + 10, y + drawStringIcon, get_temperature(ds18b20_channel[state->currentFrame].last_val));
+  String temp = get_temperature(ds18b20_channel[state->currentFrame].last_val);
+  display->drawString(x + temp_width + 10, y + drawStringIcon, temp);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(x + pressure_width + 10 + (temp.length() * 12), y + drawStringIcon, "ºC");
 }
 
 void display_dht_temp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -192,7 +195,10 @@ void display_dht_temp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawXbm(x + 0, y + drawHeightIcon, temp_width, temp_height, temp_bits);
   display->setFont(ArialMT_Plain_24);
-  display->drawString(x + temp_width + 10, y + drawStringIcon , get_temperature(dht_channel[dht_val].temp));
+  String temp = get_temperature(dht_channel[dht_val].temp);
+  display->drawString(x + temp_width + 10, y + drawStringIcon , temp);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(x + pressure_width + 10 + (temp.length() * 12), y + drawStringIcon, "ºC");
 }
 
 void display_dht_humidity(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -203,7 +209,10 @@ void display_dht_humidity(OLEDDisplay *display, OLEDDisplayUiState* state, int16
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawXbm(x + 0, y + drawHeightIcon, humidity_width, humidity_height, humidity_bits);
   display->setFont(ArialMT_Plain_24);
-  display->drawString(x + humidity_width + 10, y + drawStringIcon, get_humidity(dht_channel[dht_val].humidity));
+  String humidity = get_humidity(dht_channel[dht_val].humidity);
+  display->drawString(x + humidity_width + 10, y + drawStringIcon, humidity);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(x + pressure_width + 10 + (humidity.length() * 12), y + drawStringIcon, "%");
 }
 
 void display_bme280_temp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -214,7 +223,10 @@ void display_bme280_temp(OLEDDisplay *display, OLEDDisplayUiState* state, int16_
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawXbm(x + 0, y + drawHeightIcon, temp_width, temp_height, temp_bits);
   display->setFont(ArialMT_Plain_24);
-  display->drawString(x + temp_width + 10 , y + drawStringIcon , get_temperature(bme_channel.temp));
+  String temp = get_temperature(bme_channel.temp);
+  display->drawString(x + temp_width + 10, y + drawStringIcon , temp);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(x + pressure_width + 10 + (temp.length() * 12), y + drawStringIcon, "ºC");
 }
 
 void display_bme280_humidity(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -225,7 +237,10 @@ void display_bme280_humidity(OLEDDisplay *display, OLEDDisplayUiState* state, in
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawXbm(x + 0, y + drawHeightIcon, humidity_width, humidity_height, humidity_bits);
   display->setFont(ArialMT_Plain_24);
-  display->drawString(x + humidity_width + 10, y + drawStringIcon, get_humidity(bme_channel.humidity));
+  String humidity = get_humidity(bme_channel.humidity);
+  display->drawString(x + humidity_width + 10, y + drawStringIcon, humidity);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(x + pressure_width + 10 + (humidity.length() * 12), y + drawStringIcon, "%");
 }
 
 void display_bme280_pressure(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -236,27 +251,36 @@ void display_bme280_pressure(OLEDDisplay *display, OLEDDisplayUiState* state, in
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawXbm(x + 0, y + drawHeightIcon, pressure_width, pressure_height, pressure_bits);
   display->setFont(ArialMT_Plain_24);
-  display->drawString(x + pressure_width + 10, y + drawStringIcon, get_pressure(bme_channel.pressure));
+  String pressure = get_pressure(bme_channel.pressure);
+  display->drawString(x + pressure_width + 10, y + drawStringIcon, pressure);
+  display->setFont(ArialMT_Plain_10);
+  display->drawString(x + pressure_width + 10 + (pressure.length() * 14), y + drawStringIcon, "hPa");
 }
 
 void display_blank(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-
+  display->drawXbm(10, 17, supla_logo_width, supla_logo_height, supla_logo_bits);
+  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->setFont(ArialMT_Plain_16);
+  display->drawString(supla_logo_width + 10, display->getHeight() / 2, "SUPLA");
 }
 
 void button_turn_oled() {
   int config_read = digitalRead(CONFIG_PIN);
-  if (config_read != last_oled_state) {
+
+  if (config_read != last_oled_state && config_read == 0) {
     display.setBrightness(255);
+    //display.displayOn();
 
     oled_state = 0;
     time_last_oled_change = millis();
-  }
-  if ((millis() - time_last_oled_change) > (max_frames * 5000) && oled_state == 0) {
-    display.setBrightness(50);
-    oled_state = 1;
+    last_oled_state = config_read;
   }
 
-  last_oled_state = config_read;
+  if ((millis() - time_last_oled_change) > (max_frames * 5000) && oled_state == 0) {
+    display.setBrightness(50);
+    //display.displayOff();
+    oled_state = 1;
+  }
 }
 
 void turn_oled() {
@@ -296,7 +320,7 @@ void supla_oled_start() {
       frameCount += 1;
     }
   }
-  
+
   if (nr_bme > 0) {
     for (int i = 0; i < nr_bme; i++) {
       frames[frameCount] = {display_bme280_temp};

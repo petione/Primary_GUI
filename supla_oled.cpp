@@ -239,6 +239,10 @@ void display_bme280_pressure(OLEDDisplay *display, OLEDDisplayUiState* state, in
   display->drawString(x + pressure_width + 10, y + drawStringIcon, get_pressure(bme_channel.pressure));
 }
 
+void display_blank(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
+
+}
+
 void button_turn_oled() {
   int config_read = digitalRead(CONFIG_PIN);
   if (config_read != last_oled_state) {
@@ -274,6 +278,7 @@ void supla_oled_start() {
   }
 
   max_frames = nr_ds18b20_pom + nr_dht * 2 + nr_bme * 3;
+  if (max_frames == 0) max_frames = 1;
   frames = (FrameCallback*)malloc(sizeof(FrameCallback) * max_frames);
 
   if (nr_ds18b20 > 1) {
@@ -291,6 +296,7 @@ void supla_oled_start() {
       frameCount += 1;
     }
   }
+  
   if (nr_bme > 0) {
     for (int i = 0; i < nr_bme; i++) {
       frames[frameCount] = {display_bme280_temp};
@@ -300,6 +306,11 @@ void supla_oled_start() {
       frames[frameCount] = {display_bme280_pressure};
       frameCount += 1;
     }
+  }
+
+  if (frameCount == 0) {
+    frames[frameCount] = {display_blank};
+    frameCount += 1;
   }
 
   ui.setTargetFPS(60);

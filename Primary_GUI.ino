@@ -179,7 +179,7 @@ void setup() {
   SuplaDevice.setStatusFuncImpl(&status_func);
   // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
   //SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
-  SuplaDevice.setTimerFuncImpl(&supla_timer);
+  //SuplaDevice.setTimerFuncImpl(&supla_timer);
   SuplaDevice.setName(read_supla_hostname().c_str());
 
   SuplaDevice.begin(GUID,              // Global Unique Identifier
@@ -211,6 +211,7 @@ void loop() {
   }
 
   supla_oled_timer();
+  configBTN();
 }
 //*********************************************************************************************************
 
@@ -267,7 +268,7 @@ void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
 }
 
 void supla_timer() {
-  configBTN();
+
 }
 
 SuplaDeviceCallbacks supla_arduino_get_callbacks(void) {

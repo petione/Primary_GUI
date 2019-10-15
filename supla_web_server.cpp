@@ -260,6 +260,14 @@ String supla_webpage_start(int save) {
         content += " <b>&deg;C</b> ";
         content += "</label></i>";
       } else if (ds18b20_channel[i].type == 0) {
+        content += "<i><input name='ds18b20_name_id_";
+        content += i;
+        content += "' value='" + String(ds18b20_channel[i].name.c_str()) + "' maxlength=";
+        content += MAX_DS18B20_NAME;
+        content += "><label>";
+        content += "Nazwa ";
+        content += i;
+        content += "</label></i>";
         content += "<i><label>";
         if (temp != -275)content += temp;
         else content += "--.--";

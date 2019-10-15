@@ -29,7 +29,7 @@ int frameCount = 0;
 long timeLastSwitchDHT = 0;
 int dht_val = -1;
 
-int last_oled_state = HIGH;
+byte last_oled_state;
 unsigned long time_last_oled_change;
 byte oled_state = 0;
 int max_frames;
@@ -267,7 +267,7 @@ void display_blank(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, i
 void button_turn_oled() {
   int config_read = digitalRead(CONFIG_PIN);
 
-  if (config_read != last_oled_state && config_read == 0) {
+  if (config_read != last_oled_state && config_read == 0 && oled_state == 1) {
     display.setBrightness(255);
     //display.displayOn();
 
@@ -305,7 +305,7 @@ void supla_oled_start() {
   if (max_frames == 0) max_frames = 1;
   frames = (FrameCallback*)malloc(sizeof(FrameCallback) * max_frames);
 
-  if (nr_ds18b20 > 1) {
+  if (nr_ds18b20 > 0) {
     for (int i = 0; i < nr_ds18b20_pom; i++) {
       frames[frameCount] = {display_temperature};
       frameCount += 1;
@@ -337,15 +337,22 @@ void supla_oled_start() {
     frameCount += 1;
   }
 
-  ui.setTargetFPS(60);
-  ui.setActiveSymbol(activeSymbol);
-  ui.setInactiveSymbol(inactiveSymbol);
-  ui.setIndicatorPosition(BOTTOM);
-  ui.setIndicatorDirection(LEFT_RIGHT);
-  ui.setFrameAnimation(SLIDE_LEFT);
+
+  if (frameCount == 1) {
+    ui.setTargetFPS(60);
+    ui.disableAllIndicators();
+    ui.disableAutoTransition();
+  } else {
+    ui.setTargetFPS(60);
+    ui.setActiveSymbol(activeSymbol);
+    ui.setInactiveSymbol(inactiveSymbol);
+    ui.setIndicatorPosition(BOTTOM);
+    ui.setIndicatorDirection(LEFT_RIGHT);
+    ui.setFrameAnimation(SLIDE_LEFT);
+    ui.setTimePerFrame(5000);
+  }
   ui.setFrames(frames, frameCount);
   ui.setOverlays(overlays, overlaysCount);
-  ui.setTimePerFrame(5000);
   ui.init();
 
   display.flipScreenVertically();

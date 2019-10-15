@@ -163,7 +163,7 @@ String get_pressure(double pressure) {
   if (pressure == -275) {
     return "error";
   } else {
-    return String(pressure, 0);
+    return String(floor(pressure), 0);
   }
 }
 

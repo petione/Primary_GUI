@@ -506,3 +506,21 @@ String read_DS18b20_name(int nr) {
   EEPROM.end();
   return read_eeprom;
 }
+
+void save_bme_elevation(int temp) {
+  int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY +  MAX_RELAY_STATE + (MAX_DS18B20_SIZE * MAX_DS18B20) + (MAX_DS18B20_NAME * MAX_DS18B20);
+  EEPROM.begin(EEPROM_SIZE);
+  EEPROM.put(start, temp);
+  EEPROM.commit();
+  EEPROM.end();
+}
+
+int read_bme_elevation() {
+  int temp = 0;
+  int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY +  MAX_RELAY_STATE + (MAX_DS18B20_SIZE * MAX_DS18B20) + (MAX_DS18B20_NAME * MAX_DS18B20);
+  EEPROM.begin(EEPROM_SIZE);
+  delay(100);
+  EEPROM.get(start, temp);
+  EEPROM.end();
+  return temp;
+}

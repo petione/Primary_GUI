@@ -347,6 +347,10 @@ void createWebServer() {
         }
       }
     }
+    if (nr_bme > 0) {
+      bme_channel.elevation = httpServer.arg("bme_elevation").toFloat();
+      save_bme_elevation(bme_channel.elevation);
+    }
 
     httpServer.send(200, "text/html", supla_webpage_start(1));
   });
@@ -480,6 +484,7 @@ void first_start(void) {
   save_login(DEFAULT_LOGIN);
   save_login_pass(DEFAULT_PASSWORD);
   save_supla_hostname(DEFAULT_HOSTNAME);
+  save_bme_elevation(120);
 }
 
 String read_rssi(void) {
@@ -524,42 +529,45 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
 
 double get_pressure(int channelNumber, double last_val) {
   double pressure = -275;
-  pressure = bme.readPressure() / 100.0F;
-  bme_channel.pressure = pressure;
-  // Serial.print("Pressure = ");
-  // Serial.print(bme.readPressure() / 100);
-  // Serial.println(" hPa");
-  return  pressure;
+  double pressure_sea = -275;
+
+  pressure = bme.readPressure();
+  pressure_sea = pressure / pow(2.718281828, - (bme_channel.elevation / ((273.15 + bme_channel.temp) * 29.263))) / 100.0F;
+
+  bme_channel.pressure = pressure / 100.0F;
+  bme_channel.pressure_sea = pressure_sea;
+
+  return  pressure_sea;
 }
 
 double get_temperature(int channelNumber, double last_val) {
   double t = -275;
 
   int i = channelNumber - ds18b20_channel_first;
-  if ( sensor[i].getDeviceCount() > 0 ) {
-    if ( ds18b20_channel[i].address == "FFFFFFFFFFFFFFFF" ) return -275;
-    if ( millis() - ds18b20_channel[i].lastTemperatureRequest < 0) {
-      ds18b20_channel[i].lastTemperatureRequest = millis();
-    }
-
-    if (ds18b20_channel[i].TemperatureRequestInProgress == false) {
-      sensor[i].requestTemperaturesByAddress(ds18b20_channel[i].deviceAddress);
-      ds18b20_channel[i].TemperatureRequestInProgress = true;
-    }
-
-    if ( millis() - ds18b20_channel[i].lastTemperatureRequest > 1000) {
-      if ( ds18b20_channel[i].type == 0 ) {
-        sensor[i].requestTemperatures();
-        t = sensor[i].getTempCByIndex(0);
-      } else {
-        t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
-      }
-      if (t == -127) t = -275;
-      ds18b20_channel[i].last_val = t;
-      ds18b20_channel[i].lastTemperatureRequest = millis();
-      ds18b20_channel[i].TemperatureRequestInProgress = false;
-    }
+  // if ( sensor[i].getDeviceCount() > 0 ) {
+  if ( ds18b20_channel[i].address == "FFFFFFFFFFFFFFFF" ) return -275;
+  if ( millis() - ds18b20_channel[i].lastTemperatureRequest < 0) {
+    ds18b20_channel[i].lastTemperatureRequest = millis();
   }
+
+  if (ds18b20_channel[i].TemperatureRequestInProgress == false) {
+    sensor[i].requestTemperaturesByAddress(ds18b20_channel[i].deviceAddress);
+    ds18b20_channel[i].TemperatureRequestInProgress = true;
+  }
+
+  if ( millis() - ds18b20_channel[i].lastTemperatureRequest > 1000) {
+    if ( ds18b20_channel[i].type == 0 ) {
+      sensor[i].requestTemperatures();
+      t = sensor[i].getTempCByIndex(0);
+    } else {
+      t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
+    }
+    if (t == -127) t = -275;
+    ds18b20_channel[i].last_val = t;
+    ds18b20_channel[i].lastTemperatureRequest = millis();
+    ds18b20_channel[i].TemperatureRequestInProgress = false;
+  }
+  // }
   return t;
 }
 
@@ -713,6 +721,7 @@ void add_BME280_Sensor() {
   bme_channel.pressure_channel = SuplaDevice.addPressureSensor();
   bme_channel.temperature_channel = SuplaDevice.addDHT22();
 
+  bme_channel.elevation = read_bme_elevation();
   nr_bme++;
 }
 

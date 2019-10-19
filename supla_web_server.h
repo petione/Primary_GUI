@@ -28,6 +28,7 @@ extern byte Modul_tryb_konfiguracji;
 typedef struct {
   int status;
   String status_msg;
+  String status_msg_oled;
   String old_status_msg;
 } _supla_status;
 extern _supla_status supla_status;

@@ -21,6 +21,7 @@ void save_supla_relay_flag(int nr, String save);
 void save_supla_relay_state(int nr, String save);
 void save_DS18b20_address(String save, int nr);
 void save_DS18b20_name(String save, int nr);
+void save_bme_elevation(int temp);
 
 String read_wifi_ssid(void);
 String read_wifi_pass(void);
@@ -36,5 +37,6 @@ int read_supla_relay_flag(int nr);
 int read_supla_relay_state(int nr);
 String read_DS18b20_address(int nr);
 String read_DS18b20_name(int nr);
+int read_bme_elevation();
 
 #endif //SUPLA_EEPROM_H

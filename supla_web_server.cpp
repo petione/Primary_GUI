@@ -297,7 +297,8 @@ String supla_webpage_start(int save) {
     content += "<div class='w'>";
     content += "<h3>BME280</h3>";
     get_temperature_and_humidity(bme_channel.temperature_channel, &temp_html, &humidity_html);
-    double pressure = get_pressure(bme_channel.pressure_channel, 0);
+    double pressure = bme_channel.pressure;
+    double pressure_sea = bme_channel.pressure_sea;
 
     content += "<i><label>";
     if (temp_html != -275) content += temp_html;
@@ -306,9 +307,40 @@ String supla_webpage_start(int save) {
     if (humidity_html != -1) content += humidity_html;
     else content += "--.--";
     content += "<b>&#37;</b>&emsp;";
+    //  if (pressure != -275) content += pressure;
+    //  else content += "--.--";
+    //  content += "<b>hPa</b>";
+    content += "</label></i>";
+/*
+    content += "<i><label>";
+    content += "Ciśn. bezwzgl. ";
     if (pressure != -275) content += pressure;
     else content += "--.--";
-    content += "<b>hPa</b>";
+    content += "<b>hPa </b> ";
+    content += "</label></i>";
+
+    content += "<i><label>";
+    content += "Ciśnienie ";
+    if (pressure_sea != -275) content += pressure_sea;
+    else content += "--.--";
+    content += "<b>hPa </b> ";
+    content += "</label></i>";
+*/
+
+    content += "<i><input name='pom1' value='" + String(pressure) + "' readonly><label style='left: calc(100% - 255px)'>hPa</label>";
+    content += "<label>";
+    content += "Ciśn. bezwzgl.";
+    content += "</label></i>";
+
+    content += "<i><input name='pom1' value='" + String(pressure_sea) + "' readonly><label style='left: calc(100% - 255px)'>hPa</label>";
+    content += "<label>";
+    content += "Ciśnienie";
+    content += "</label></i>";
+    
+
+    content += "<i><input name='bme_elevation' type='number' step='1' min='-1000' max='1000' ";
+    content += "value='" + String(bme_channel.elevation) + "'><label>";
+    content += "Wysokość m.n.p.m";
     content += "</label></i>";
     content += "</div>";
   }
@@ -388,25 +420,81 @@ String my_mac_adress(void) {
 
 void status_func(int status, const char *msg) {
   switch (status) {
-    case 2:  supla_status.status_msg = "Już zainicjalizowane";              break;
-    case 3:  supla_status.status_msg = "Nie przypisane CB";                 break;
-    case 4:  supla_status.status_msg = "Nieprawidłowy identyfikator GUID lub rejestracja urządzeń NIEAKTYWNA";  break;
-    case 5:  supla_status.status_msg = "Nieznany adres serwera";            break;
-    case 6:  supla_status.status_msg = "Nieznany identyfikator ID";         break;
-    case 7:  supla_status.status_msg = "Zainicjowany";                      break;
-    case 8:  supla_status.status_msg = "Przekroczono limit kanału";         break;
-    case 9:  supla_status.status_msg = "Rozłączony";                        break;
-    case 10: supla_status.status_msg = "Rejestracja w toku";                break;
-    case 11: supla_status.status_msg = "Błąd zmiennej";                     break;
-    case 12: supla_status.status_msg = "Błąd wersji protokołu";             break;
-    case 13: supla_status.status_msg = "Złe poświadczenia";                 break;
-    case 14: supla_status.status_msg = "Tymczasowo niedostępne";            break;
-    case 15: supla_status.status_msg = "Konflikt lokalizacji";              break;
-    case 16: supla_status.status_msg = "Konflikt kanałów";                  break;
-    case 17: supla_status.status_msg = "Zarejestrowany i gotowy";           break;
-    case 18: supla_status.status_msg = "Urządzenie jest rozłączone";        break;
-    case 19: supla_status.status_msg = "Lokalizacja jest wyłączona";        break;
-    case 20: supla_status.status_msg = "Przekroczono limit urządzeń";       break;
+    case 2:
+      supla_status.status_msg = "Już zainicjalizowane";
+      supla_status.status_msg_oled = "Juz zainicjalizowane";
+      break;
+    case 3:
+      supla_status.status_msg = "Nie przypisane CB";
+      supla_status.status_msg_oled = "Nie przypisane CB";
+      break;
+    case 4:
+      supla_status.status_msg = "Nieprawidłowy identyfikator GUID lub rejestracja urządzeń NIEAKTYWNA";
+      supla_status.status_msg_oled = "Nieprawidlowy identyfikator GUID lub rejestracja urzadzen NIEAKTYWNA";
+      break;
+    case 5:
+      supla_status.status_msg = "Nieznany adres serwera";
+      supla_status.status_msg_oled = "Nieznany adres serwera";
+      break;
+    case 6:
+      supla_status.status_msg = "Nieznany identyfikator ID";
+      supla_status.status_msg_oled = "Nieznany identyfikator ID";
+      break;
+    case 7:
+      supla_status.status_msg = "Zainicjowany";
+      supla_status.status_msg_oled = "Zainicjowany";
+      break;
+    case 8:
+      supla_status.status_msg = "Przekroczono limit kanału";
+      supla_status.status_msg_oled = "Przekroczono limit kanalu";
+      break;
+    case 9:
+      supla_status.status_msg = "Rozłączony";
+      supla_status.status_msg_oled = "Rozlaczony";
+      break;
+    case 10:
+      supla_status.status_msg = "Rejestracja w toku";
+      supla_status.status_msg_oled = "Rejestracja w toku";
+      break;
+    case 11:
+      supla_status.status_msg = "Błąd zmiennej";
+      supla_status.status_msg_oled = "Blad zmiennej";
+      break;
+    case 12:
+      supla_status.status_msg = "Błąd wersji protokołu";
+      supla_status.status_msg_oled = "Blad wersji protokolu";
+      break;
+    case 13:
+      supla_status.status_msg = "Złe poświadczenia";
+      supla_status.status_msg_oled = "Zle poswiadczenia";
+      break;
+    case 14:
+      supla_status.status_msg = "Tymczasowo niedostępne";
+      supla_status.status_msg_oled = "Tymczasowo niedostepne";
+      break;
+    case 15:
+      supla_status.status_msg = "Konflikt lokalizacji";
+      supla_status.status_msg_oled = "Konflikt lokalizacji";
+      break;
+    case 16:
+      supla_status.status_msg = "Konflikt kanałów";
+      supla_status.status_msg_oled = "Konflikt kanalow";
+      break;
+    case 17:
+      supla_status.status_msg = "Zarejestrowany i gotowy";
+      supla_status.status_msg_oled = "Zarejestrowany i gotowy";
+      break;
+    case 18:
+      supla_status.status_msg = "Urządzenie jest rozłączone";
+      supla_status.status_msg_oled = "Urzadzenie jest rozlaczone";
+      break;
+    case 19:
+      supla_status.status_msg = "Lokalizacja jest wyłączona";
+      supla_status.status_msg_oled = "Lokalizacja jest wylaczona";
+      break;
+    case 20:
+      supla_status.status_msg = "Przekroczono limit urządzeń";
+      supla_status.status_msg_oled = "Przekroczono limit urzadzen"; break;
   }
 
   static int lock;

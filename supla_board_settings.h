@@ -42,6 +42,8 @@ typedef struct {
   double temp;
   double humidity;
   double pressure;
+  double pressure_sea;
+  int elevation;
 } _bme_channel;
 extern _bme_channel bme_channel;
 

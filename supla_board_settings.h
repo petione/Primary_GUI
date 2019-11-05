@@ -57,5 +57,7 @@ extern _dht_channel dht_channel[];
 String GetAddressToString(DeviceAddress deviceAddress);
 void supla_board_configuration(void);
 
+int supla_DigitalRead(int channelNumber, uint8_t pin);
+void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val);
 
 #endif //SUPLA_BOARD_SETTINGS_H

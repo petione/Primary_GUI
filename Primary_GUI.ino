@@ -7,7 +7,7 @@
 
  * *************************************************************************
 */
-
+#include <Arduino.h>
 
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
@@ -24,6 +24,10 @@
 #include <DallasTemperature.h>
 #include <DHT.h>
 
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
+
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
@@ -32,6 +36,7 @@
 #include "supla_web_server.h"
 #include "supla_board_settings.h"
 #include "supla_oled.h"
+#include "hardware.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -177,9 +182,7 @@ void setup() {
   WiFi.onEvent(WiFiEvent);
 
   SuplaDevice.setStatusFuncImpl(&status_func);
-  // SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
-  //SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
-  //SuplaDevice.setTimerFuncImpl(&supla_timer);
+  SuplaDevice.setTimerFuncImpl(&supla_timer);
   SuplaDevice.setName(read_supla_hostname().c_str());
 
   SuplaDevice.begin(GUID,              // Global Unique Identifier
@@ -195,6 +198,10 @@ void setup() {
 
   httpUpdater.setup(&httpServer, UPDATE_PATH, www_username, www_password);
   httpServer.begin();
+
+#if defined(ARDUINO_OTA)
+  arduino_OTA_start();
+#endif
 }
 
 //*********************************************************************************************************
@@ -210,8 +217,14 @@ void loop() {
     SuplaDevice.iterate();
   }
 
+
   supla_oled_timer();
   configBTN();
+  
+#if defined(ARDUINO_OTA)
+  ArduinoOTA.handle();
+#endif
+
 }
 //*********************************************************************************************************
 
@@ -245,26 +258,6 @@ void supla_arduino_svr_disconnect(void) {
 
 void supla_arduino_eth_setup(uint8_t mac[6], IPAddress *ip) {
   WiFi_up();
-}
-
-int supla_DigitalRead(int channelNumber, uint8_t pin) {
-
-  int result = digitalRead(pin);
-  /*Serial.print("Read(");
-    Serial.print(pin);
-    Serial.print("): ");
-    Serial.println(result);*/
-  return result;
-}
-
-void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
-
-  /*Serial.print("Write(");
-    Serial.print(pin);
-    Serial.print(",");
-    Serial.print(val);
-    Serial.println(")");*/
-  digitalWrite(pin, val);
 }
 
 void supla_timer() {
@@ -834,4 +827,44 @@ void configBTN() {
     }
   }
   last_config_state = config_read;
+}
+
+void arduino_OTA_start() {
+#if defined(ARDUINO_OTA)
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_SPIFFS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+  Serial.println("Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+#endif
 }

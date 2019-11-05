@@ -1,8 +1,5 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include <EEPROM.h>
-#include <DallasTemperature.h>
 
 #define SUPLADEVICE_CPP
 #include <SuplaDevice.h>
@@ -10,7 +7,14 @@
 #include "ESP8266TrueRandom.h"
 #include "supla_settings.h"
 #include "supla_eeprom.h"
+#include "supla_web_server.h"
 #include "supla_board_settings.h"
+#include "supla_oled.h"
+#include "hardware.h"
+
+extern "C" {
+#include "user_interface.h"
+}
 
 char GUID[SUPLA_GUID_SIZE];
 byte uuidNumber[16]; // UUIDs in binary form are 16 bytes long
@@ -416,6 +420,7 @@ int read_supla_relay_flag(int nr) {
 }
 
 void save_supla_relay_state(int nr, String save) {
+  Serial.print("Save");Serial.println(save);
   if (nr <= MAX_RELAY) {
     int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY + nr;
     int len = save.length();
@@ -436,6 +441,8 @@ int read_supla_relay_state(int nr) {
     read_eeprom = EEPROM.read(start);
     EEPROM.end();
   }
+  Serial.print("numerek");Serial.println(nr);
+  Serial.println(read_eeprom - 48);
   return read_eeprom - 48;
 }
 

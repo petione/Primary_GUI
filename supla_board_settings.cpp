@@ -1,32 +1,4 @@
-#include <ESP8266WiFi.h>
-#include <WiFiClient.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-
-#include <EEPROM.h>
-#include <DoubleResetDetector.h> //Bilioteka by Stephen Denne
-
-#define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
-
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include <DHT.h>
-
-#include "supla_settings.h"
-#include "supla_eeprom.h"
-#include "supla_web_server.h"
-#include "supla_board_settings.h"
-
-extern "C" {
-#include "user_interface.h"
-}
-
-
-
-void supla_board_configuration(void) {
-
-   add_Relay_Button(13, 0, CHOICE_TYPE);
+  //  add_Relay_Button(13, 0, CHOICE_TYPE);
   //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
   //  Czas załączenia przekaźnika działa tylko dla przycisku MONOSTABILNEGO
@@ -43,16 +15,85 @@ void supla_board_configuration(void) {
   //  add_Sensor(4);
   //  add_Sensor(16);
 
-   add_DS18B20Multi_Thermometer(12);
+  // add_DS18B20Multi_Thermometer(12);
   // add_DS18B20_Thermometer(12);
   // add_DHT11_Thermometer(12);
   // add_DHT22_Thermometer(4);
-  
   //  add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+  
+  // add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+  // add_Led_Config(LED_CONFIG_PIN);
+  // add_Config(CONFIG_PIN);
 
-  add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+#include <Arduino.h>
 
+#define SUPLADEVICE_CPP
+#include <SuplaDevice.h>
+
+#include "supla_settings.h"
+#include "supla_eeprom.h"
+#include "supla_web_server.h"
+#include "supla_board_settings.h"
+#include "supla_oled.h"
+#include "hardware.h"
+
+extern "C" {
+#include "user_interface.h"
+}
+
+void supla_board_configuration(void) {
+
+#if defined(SONOFF_BASIC_CWU)
+
+  add_Relay_Button(RELAY_PIN, PIN_BUTTON, CHOICE_TYPE);
+  add_Relay(VIRTUAL_PIN_LOCK);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
+  SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
+  SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
+
+#elif defined(SONOFF_BASIC)
+
+  add_Relay_Button(RELAY_PIN, PIN_BUTTON, CHOICE_TYPE);
+  add_Relay(VIRTUAL_PIN_LOCK);
+  add_Led_Config(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+  
+#else
+
+  // Allow users to define new settings without migration config
+  //#error "UNSUPPORTED HARDWARE!"
+
+#endif
 }
+
+#if defined(SONOFF_BASIC_CWU)
+uint8_t state_lock;
+
+int supla_DigitalRead(int channelNumber, uint8_t pin) {
+  if (pin == VIRTUAL_PIN_LOCK) return state_lock;
+
+  if (pin == RELAY_PIN)
+    if (state_lock == 1)
+      return digitalRead(pin);
+
+  if (pin == 0) return !digitalRead(pin);
+}
+
+void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
+
+  if (pin == VIRTUAL_PIN_LOCK && val != state_lock) {
+    if (val == 0) SuplaDevice.relayOff(0);
+    state_lock = val;
+    return;
+  }
+  digitalWrite(pin, val);
+}
+
+#else
+
+// Allow users to define new settings without migration config
+//#error "UNSUPPORTED HARDWARE!"
+
+#endif

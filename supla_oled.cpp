@@ -7,6 +7,7 @@
 #include "supla_web_server.h"
 #include "supla_board_settings.h"
 #include "supla_oled.h"
+#include "hardware.h"
 
 // For a connection via I2C using the Arduino Wire include:
 #include <Wire.h>               // Only needed for Arduino 1.6.5 and earlier

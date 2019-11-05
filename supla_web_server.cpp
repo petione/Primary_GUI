@@ -1,10 +1,10 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
+//#include <WiFiClient.h>
 
-#include <ESP8266WebServer.h>
-#include <ESP8266HTTPUpdateServer.h>
-#include <EEPROM.h>
+//#include <ESP8266WebServer.h>
+//#include <ESP8266HTTPUpdateServer.h>
+//#include <EEPROM.h>
 
 #define SUPLADEVICE_CPP
 #include <SuplaDevice.h>
@@ -13,7 +13,12 @@
 #include "supla_eeprom.h"
 #include "supla_web_server.h"
 #include "supla_board_settings.h"
+#include "supla_oled.h"
+#include "hardware.h"
 
+extern "C" {
+#include "user_interface.h"
+}
 
 const char* gui_color = GUI_GREEN;
 const char* gui_box_shadow = "box-shadow:0 1px 30px rgba(0,0,0,.9)";

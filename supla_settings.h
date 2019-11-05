@@ -1,4 +1,3 @@
-
 #ifndef SUPLA_SETTINGS_H
 #define SUPLA_SETTINGS_H
 
@@ -12,7 +11,6 @@
 
 #define  DEFAULT_LOGIN         "admin"
 #define  DEFAULT_PASSWORD      "password"
-#define  DEFAULT_HOSTNAME      "Primary v2"
 
 #define  UPDATE_PATH           "/firmware"
 
@@ -23,13 +21,6 @@
 //DS18B20 ************************************************************************************************
 #define  MAX_DS18B20            3
 #define  TEMPERATURE_PRECISION  10  // rozdzielczość czujnika DS 9 -12 bit
-//LED CONFIG *********************************************************************************************
-#define LED_CONFIG_PIN         2
-//CONFIG PIN *********************************************************************************************
-#define CONFIG_PIN             0
-//WIRE I2C************************************************************************************************
-#define SDA                   4
-#define SCL                   5
 
 //EEPROM *************************************************************************************************
 #define EEPROM_SIZE           4096/4
@@ -56,7 +47,7 @@
 #define CHOICE_TYPE  -1
 
 
-extern char GUID[SUPLA_GUID_SIZE];
+extern char GUID[];
 String read_rssi(void);
 int32_t read_rssi_oled (void);
 void supla_led_blinking(int led, int time);

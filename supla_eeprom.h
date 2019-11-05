@@ -1,4 +1,3 @@
-
 #ifndef SUPLA_EEPROM_H
 #define SUPLA_EEPROM_H
 

@@ -1,29 +1,29 @@
-  //  add_Relay_Button(13, 0, CHOICE_TYPE);
-  //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
+//  add_Relay_Button(13, 0, CHOICE_TYPE);
+//  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
-  //  Czas załączenia przekaźnika działa tylko dla przycisku MONOSTABILNEGO
-  //  add_Relay_Button(5, 14, CHOICE_TYPE, 5000);
-  //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE, 5000);  
+//  Czas załączenia przekaźnika działa tylko dla przycisku MONOSTABILNEGO
+//  add_Relay_Button(5, 14, CHOICE_TYPE, 5000);
+//  add_Relay_Button_Invert(13, 12, CHOICE_TYPE, 5000);
 
-  //  add_Relay(5);
-  //  add_Relay_Invert(5);
+//  add_Relay(5);
+//  add_Relay_Invert(5);
 
-  //  add_Roller_Shutter_Relays(5, 13) ;
-  //  add_Roller_Shutter_Buttons(0, 14, 12);
-  //  SuplaDevice.setRollerShutterFuncImpl(&supla_rs_SavePosition, &supla_rs_LoadPosition, &supla_rs_SaveSettings, &supla_rs_LoadSettings);
+//  add_Roller_Shutter_Relays(5, 13) ;
+//  add_Roller_Shutter_Buttons(0, 14, 12);
+//  SuplaDevice.setRollerShutterFuncImpl(&supla_rs_SavePosition, &supla_rs_LoadPosition, &supla_rs_SaveSettings, &supla_rs_LoadSettings);
 
-  //  add_Sensor(4);
-  //  add_Sensor(16);
+//  add_Sensor(4);
+//  add_Sensor(16);
 
-  // add_DS18B20Multi_Thermometer(12);
-  // add_DS18B20_Thermometer(12);
-  // add_DHT11_Thermometer(12);
-  // add_DHT22_Thermometer(4);
-  //  add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
-  
-  // add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
-  // add_Led_Config(LED_CONFIG_PIN);
-  // add_Config(CONFIG_PIN);
+// add_DS18B20Multi_Thermometer(12);
+// add_DS18B20_Thermometer(12);
+// add_DHT11_Thermometer(12);
+// add_DHT22_Thermometer(4);
+//  add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+
+// add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+// add_Led_Config(LED_CONFIG_PIN);
+// add_Config(CONFIG_PIN);
 
 #include <Arduino.h>
 
@@ -56,10 +56,9 @@ void supla_board_configuration(void) {
 #elif defined(SONOFF_BASIC)
 
   add_Relay_Button(RELAY_PIN, PIN_BUTTON, CHOICE_TYPE);
-  add_Relay(VIRTUAL_PIN_LOCK);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
-  
+
 #else
 
   // Allow users to define new settings without migration config
@@ -86,9 +85,13 @@ void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
   if (pin == VIRTUAL_PIN_LOCK && val != state_lock) {
     if (val == 0) SuplaDevice.relayOff(0);
     state_lock = val;
-    return;
   }
-  digitalWrite(pin, val);
+
+  if (pin == RELAY_PIN)
+    if (state_lock == 1) {
+      digitalWrite(pin, val);
+      val ? supla_led_blinking(LED_CONFIG_PIN, 0) : supla_led_blinking_stop();
+    }
 }
 
 #else

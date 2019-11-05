@@ -1,4 +1,4 @@
-#define ARDUINO_OTA
+//#define ARDUINO_OTA
 #define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
 

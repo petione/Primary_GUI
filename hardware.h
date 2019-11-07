@@ -1,7 +1,8 @@
 //#define ARDUINO_OTA
-//#define SONOFF_BASIC_CWU
+
+#define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
-#define SONOFF_TOUCH_2GANG
+//#define SONOFF_TOUCH_2GANG
 
 
 

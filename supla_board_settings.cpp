@@ -93,9 +93,9 @@ int supla_DigitalRead(int channelNumber, uint8_t pin) {
 
 void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
   if (pin == VIRTUAL_PIN_LOCK && val != state_lock) {
-    //SuplaDevice.channelValueChanged(0, val);
-    state_lock = val;
+    state_lock = 1;
     val ? SuplaDevice.relayOn(0, 0) : SuplaDevice.relayOff(0);
+    state_lock = val;
   }
 
   if (pin == RELAY_PIN)

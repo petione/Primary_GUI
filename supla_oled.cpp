@@ -338,7 +338,6 @@ void supla_oled_start() {
     frameCount += 1;
   }
 
-
   if (frameCount == 1) {
     ui.setTargetFPS(60);
     ui.disableAllIndicators();

@@ -19,7 +19,7 @@
 // add_DS18B20_Thermometer(12);
 // add_DHT11_Thermometer(12);
 // add_DHT22_Thermometer(4);
-//  add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+// add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
 
 // add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
 // add_Led_Config(LED_CONFIG_PIN);
@@ -43,9 +43,10 @@ extern "C" {
 
 void supla_board_configuration(void) {
 
+  //SONOFF_BASIC_CWU *****************************************************************************
 #if defined(SONOFF_BASIC_CWU)
 
-  add_Relay_Button(RELAY_PIN, PIN_BUTTON, CHOICE_TYPE);
+  add_Relay_Button(RELAY_PIN, BUTTON_PIN, CHOICE_TYPE);
   add_Relay(VIRTUAL_PIN_LOCK);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
@@ -53,10 +54,19 @@ void supla_board_configuration(void) {
   SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
   SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
 
+  //SONOFF_BASIC *********************************************************************************
 #elif defined(SONOFF_BASIC)
 
-  add_Relay_Button(RELAY_PIN, PIN_BUTTON, CHOICE_TYPE);
+  add_Relay_Button(RELAY_PIN, BUTTON_PIN, CHOICE_TYPE);
   add_Led_Config(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+
+  //SONOFF_TOUCH_2GANG*****************************************************************************
+#elif defined(SONOFF_TOUCH_2GANG)
+
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
+  //add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
 #else
@@ -67,6 +77,7 @@ void supla_board_configuration(void) {
 #endif
 }
 
+//SONOFF_BASIC_CWU *******************************************************************************
 #if defined(SONOFF_BASIC_CWU)
 uint8_t state_lock;
 
@@ -81,9 +92,9 @@ int supla_DigitalRead(int channelNumber, uint8_t pin) {
 }
 
 void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
-
   if (pin == VIRTUAL_PIN_LOCK && val != state_lock) {
-    if (val == 0) SuplaDevice.relayOff(0);
+    //val ? SuplaDevice.relayOn(0, 0) : SuplaDevice.relayOff(0);
+    SuplaDevice.channelValueChanged(0, val)
     state_lock = val;
   }
 

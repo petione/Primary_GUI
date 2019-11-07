@@ -85,7 +85,8 @@ ETSTimer led_timer;
 
 // Setup a DHT instance
 //DHT dht(DHTPIN, DHTTYPE);
-DHT dht_sensor[MAX_DHT] = {
+DHT* dht_sensor;
+/*DHT dht_sensor[MAX_DHT] = {
   { -1, -1 },
   { -1, -1 },
   { -1, -1 },
@@ -94,7 +95,7 @@ DHT dht_sensor[MAX_DHT] = {
   { -1, -1 },
   { -1, -1 },
   { -1, -1 },
-};
+  };*/
 
 // Setup a DS18B20 instance
 OneWire ds18x20[MAX_DS18B20] = 0;
@@ -176,8 +177,7 @@ void setup() {
   String supla_hostname = read_supla_hostname().c_str();
   supla_hostname.replace(" ", "-");
   WiFi.hostname(supla_hostname);
-  // delete old config
-  WiFi.disconnect(true);
+  WiFi.disconnect(true);// delete old config
   delay(1000);
   WiFi.onEvent(WiFiEvent);
 
@@ -187,8 +187,8 @@ void setup() {
 
   SuplaDevice.begin(GUID,              // Global Unique Identifier
                     mac,               // Ethernet MAC address
-                    Supla_server,  // SUPLA server address
-                    Location_id,                 // Location ID
+                    Supla_server,      // SUPLA server address
+                    Location_id,       // Location ID
                     Location_Pass);
 
   Serial.println();
@@ -220,7 +220,7 @@ void loop() {
 
   supla_oled_timer();
   configBTN();
-  
+
 #if defined(ARDUINO_OTA)
   ArduinoOTA.handle();
 #endif
@@ -667,7 +667,10 @@ void add_Relay_Invert(int relay) {
 
 void add_DHT11_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDHT11();
-  if (nr_dht == 0) dht_channel_first = channel;
+  if (nr_dht == 0) {
+    dht_sensor = (DHT*)malloc(sizeof(DHT) * MAX_DHT);
+    dht_channel_first = channel;
+  }
 
   dht_sensor[nr_dht] = { thermpin, DHT11 };
   dht_channel[nr_dht].channel = channel;
@@ -676,7 +679,10 @@ void add_DHT11_Thermometer(int thermpin) {
 
 void add_DHT22_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDHT22();
-  if (nr_dht == 0) dht_channel_first = channel;
+  if (nr_dht == 0) {
+    dht_sensor = (DHT*)malloc(sizeof(DHT) * MAX_DHT);
+    dht_channel_first = channel;
+  }
 
   dht_sensor[nr_dht] = { thermpin, DHT22 };
   dht_channel[nr_dht].channel = channel;

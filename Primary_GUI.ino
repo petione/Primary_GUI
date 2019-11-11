@@ -53,6 +53,7 @@ int nr_ds18b20 = 0;
 int nr_dht = 0;
 int nr_bme = 0;
 int nr_oled = 0;
+bool led_config_invert;
 
 _ds18b20_channel_t ds18b20_channel[MAX_DS18B20];
 _relay_button_channel relay_button_channel[MAX_RELAY];
@@ -397,6 +398,10 @@ void createWebServer() {
 void Tryb_konfiguracji() {
   supla_led_blinking(LED_CONFIG_PIN, 100);
   my_mac_adress();
+
+  httpUpdater.setup(&httpServer, UPDATE_PATH, www_username, www_password);
+  httpServer.begin();
+
   Serial.print("Tryb konfiguracji: ");
   Serial.println(Modul_tryb_konfiguracji);
 
@@ -566,7 +571,7 @@ double get_temperature(int channelNumber, double last_val) {
 
 void supla_led_blinking_func(void *timer_arg) {
   int val = digitalRead(LED_CONFIG_PIN);
-  digitalWrite(LED_CONFIG_PIN, val == HIGH ? 0 : 1);
+  digitalWrite(LED_CONFIG_PIN, val == led_config_invert ? LOW : HIGH);
 }
 
 void supla_led_blinking(int led, int time) {
@@ -579,12 +584,17 @@ void supla_led_blinking(int led, int time) {
 
 void supla_led_blinking_stop(void) {
   os_timer_disarm(&led_timer);
-  digitalWrite(LED_CONFIG_PIN, 1);
+  digitalWrite(LED_CONFIG_PIN, led_config_invert ? LOW : HIGH);
 }
 
-void supla_led_set(int ledPin) {
+void supla_led_set(int ledPin, bool hiIsLo) {
+  led_config_invert = hiIsLo;
+
+  uint8_t _HI = hiIsLo ? LOW : HIGH;
+  uint8_t _LO = hiIsLo ? HIGH : LOW;
+
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, 1);
+  digitalWrite(ledPin, _HI ? 1 : 0);
 }
 
 void supla_ds18b20_channel_start(void) {
@@ -642,7 +652,11 @@ void add_Roller_Shutter_Relays(int relay1, int relay2) {
 }
 
 void add_Led_Config(int led) {
-  supla_led_set(led);
+  supla_led_set(led, false);
+}
+
+void add_Led_Config_Invert(int led) {
+  supla_led_set(led, true);
 }
 
 void add_Config(int pin) {

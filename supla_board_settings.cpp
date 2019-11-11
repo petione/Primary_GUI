@@ -23,6 +23,7 @@
 
 // add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
 // add_Led_Config(LED_CONFIG_PIN);
+// add_Led_Config_Invert(LED_CONFIG_PIN);
 // add_Config(CONFIG_PIN);
 
 #include <Arduino.h>
@@ -69,8 +70,18 @@ void supla_board_configuration(void) {
   //add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
-#else
+  //SONOFF_TOUCH_3GANG_ESP8285***********************************************************************
+#elif defined(SONOFF_TOUCH_3GANG_ESP8285)
 
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, CHOICE_TYPE);
+  add_DS18B20_Thermometer(DS18B20_PIN);
+  add_Led_Config_Invert(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+
+#else
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
   // Allow users to define new settings without migration config
   //#error "UNSUPPORTED HARDWARE!"
 
@@ -88,7 +99,7 @@ int supla_DigitalRead(int channelNumber, uint8_t pin) {
     if (state_lock == 1)
       return digitalRead(pin);
 
-  if (pin == 0) return !digitalRead(pin);
+  if (pin == BUTTON_PIN) return digitalRead(pin);
 }
 
 void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
@@ -98,11 +109,15 @@ void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
     state_lock = val;
   }
 
-  if (pin == RELAY_PIN)
+  if (pin == RELAY_PIN) {
     if (state_lock == 1) {
+      // val ? digitalWrite(LED_CONFIG_PIN, 0) : digitalWrite(LED_CONFIG_PIN, 1);
+      digitalWrite(LED_CONFIG_PIN, !val);
       digitalWrite(pin, val);
-      val ? supla_led_blinking(LED_CONFIG_PIN, 0) : supla_led_blinking_stop();
     }
+  }
+
+  if (pin == BUTTON_PIN) digitalWrite(pin, val);
 }
 
 #else

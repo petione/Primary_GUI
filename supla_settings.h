@@ -58,6 +58,7 @@ void add_Sensor(int sensor);
 void add_Roller_Shutter_Buttons(int channel, int button1, int button2);
 void add_Roller_Shutter_Relays(int relay1, int relay2);
 void add_Led_Config(int led);
+void add_Led_Config_Invert(int led);
 void add_Config(int pin);
 void add_Relay(int relay);
 void add_Relay_Invert(int relay);

@@ -1,9 +1,9 @@
 //#define ARDUINO_OTA
 
-//#define SONOFF_BASIC_CWU
+#define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
 //#define SONOFF_TOUCH_2GANG
-#define SONOFF_TOUCH_3GANG_ESP8285
+//#define SONOFF_TOUCH_3GANG_ESP8285
 
 
 
@@ -64,7 +64,7 @@
 
 #define DEFAULT_HOSTNAME      "TEST"
 
-#define RELAY1_PIN            5
+#define RELAY1_PIN            12
 #define BUTTON1_PIN           0
 
 #define LED_CONFIG_PIN        2

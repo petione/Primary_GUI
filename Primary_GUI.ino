@@ -749,9 +749,10 @@ void add_Relay_Button_Invert(int relay, int button, int type) {
 void add_Relay_Button(int relay, int button, int type, int DurationMS) {
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 0;
-  nr_button++;
+
   nr_relay++;
   if (type == CHOICE_TYPE) {
+    nr_button++;
     int select_button = read_supla_button_type(nr_button);
     type = select_button;
   }
@@ -762,9 +763,10 @@ void add_Relay_Button(int relay, int button, int type, int DurationMS) {
 void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 1;
-  nr_button++;
+
   nr_relay++;
   if (type == CHOICE_TYPE) {
+    nr_button++;
     int select_button = read_supla_button_type(nr_button);
     type = select_button;
   }

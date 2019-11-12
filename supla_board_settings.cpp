@@ -73,15 +73,18 @@ void supla_board_configuration(void) {
   //SONOFF_TOUCH_3GANG_ESP8285***********************************************************************
 #elif defined(SONOFF_TOUCH_3GANG_ESP8285)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
-  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, 1);
   add_DS18B20_Thermometer(DS18B20_PIN);
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
 #else
   add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+
+  add_Led_Config(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
   // Allow users to define new settings without migration config
   //#error "UNSUPPORTED HARDWARE!"
 
@@ -90,34 +93,30 @@ void supla_board_configuration(void) {
 
 //SONOFF_BASIC_CWU *******************************************************************************
 #if defined(SONOFF_BASIC_CWU)
-uint8_t state_lock;
+uint8_t state_lock = 1;
 
 int supla_DigitalRead(int channelNumber, uint8_t pin) {
   if (pin == VIRTUAL_PIN_LOCK) return state_lock;
 
-  if (pin == RELAY_PIN)
-    if (state_lock == 1)
-      return digitalRead(pin);
+  if (pin == RELAY_PIN && state_lock == 1) return digitalRead(pin);
 
   if (pin == BUTTON_PIN) return digitalRead(pin);
 }
 
 void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
-  if (pin == VIRTUAL_PIN_LOCK && val != state_lock) {
+  if (pin == VIRTUAL_PIN_LOCK) {
     state_lock = 1;
+    SuplaDevice.channelValueChanged(channelNumber, val);
     val ? SuplaDevice.relayOn(0, 0) : SuplaDevice.relayOff(0);
     state_lock = val;
   }
 
-  if (pin == RELAY_PIN) {
-    if (state_lock == 1) {
-      // val ? digitalWrite(LED_CONFIG_PIN, 0) : digitalWrite(LED_CONFIG_PIN, 1);
-      digitalWrite(LED_CONFIG_PIN, !val);
-      digitalWrite(pin, val);
-    }
+  if (pin == RELAY_PIN && state_lock == 1) {
+    digitalWrite(LED_CONFIG_PIN, !val);
+    digitalWrite(RELAY_PIN, val);
   }
 
-  if (pin == BUTTON_PIN) digitalWrite(pin, val);
+  if (pin == BUTTON_PIN) digitalWrite(BUTTON_PIN, val);
 }
 
 #else

@@ -1,3 +1,4 @@
+//  CHOICE_TYPE 0-BISTABILNY 1-MONOSTABILNY
 //  add_Relay_Button(13, 0, CHOICE_TYPE);
 //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
@@ -47,7 +48,7 @@ void supla_board_configuration(void) {
   //SONOFF_BASIC_CWU *****************************************************************************
 #if defined(SONOFF_BASIC_CWU)
 
-  add_Relay_Button(RELAY_PIN, BUTTON_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY_PIN, BUTTON_PIN, 1);
   add_Relay(VIRTUAL_PIN_LOCK);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);

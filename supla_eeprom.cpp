@@ -528,3 +528,25 @@ int read_bme_elevation() {
   EEPROM.end();
   return temp;
 }
+
+void save_supla_button_duration(int nr, String save) {
+  int len = save.length();
+  if (len > 0) {
+    int duration = save.toInt();
+    int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY +  MAX_RELAY_STATE + (MAX_DS18B20_SIZE * MAX_DS18B20) + (MAX_DS18B20_NAME * MAX_DS18B20) + MAX_BME_ELEVATION + (MAX_BUTTON_DURATION * nr);
+    EEPROM.begin(EEPROM_SIZE);
+    EEPROM.put(start, duration);
+    EEPROM.commit();
+    EEPROM.end();
+  }
+}
+
+int read_supla_button_duration(int nr) {
+  int duration = 0;
+  int start = 1 + MAX_SSID + MAX_PASSWORD + MAX_MLOGIN + MAX_MPASSWORD + MAX_SUPLA_SERVER + MAX_SUPLA_ID + MAX_SUPLA_PASS + MAX_HOSTNAME + (SUPLA_GUID_SIZE * 2) + MAX_BUTTON + MAX_RELAY +  MAX_RELAY_STATE + (MAX_DS18B20_SIZE * MAX_DS18B20) + (MAX_DS18B20_NAME * MAX_DS18B20) + MAX_BME_ELEVATION + (MAX_BUTTON_DURATION * nr);
+  EEPROM.begin(EEPROM_SIZE);
+  delay(100);
+  EEPROM.get(start, duration);
+  EEPROM.end();
+  return duration;
+}

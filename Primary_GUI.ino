@@ -152,7 +152,7 @@ void setup() {
   www_password = strcpy((char*)malloc(www_password1.length() + 1), www_password1.c_str());
   www_username = strcpy((char*)malloc(www_username1.length() + 1), www_username1.c_str());
 
-  //  Pokaz_zawartosc_eeprom();
+  //Pokaz_zawartosc_eeprom();
   read_guid();
   int Location_id = read_supla_id().toInt();
   strcpy(Supla_server, read_supla_server().c_str());
@@ -203,6 +203,7 @@ void setup() {
 #if defined(ARDUINO_OTA)
   arduino_OTA_start();
 #endif
+
 }
 
 //*********************************************************************************************************
@@ -311,17 +312,37 @@ void createWebServer() {
     save_supla_id(httpServer.arg("supla_id"));
     save_supla_pass(httpServer.arg("supla_pass"));
     if (nr_button > 0) {
-      for (int i = 1; i <= nr_button; ++i) {
+      for (int i = 0; i < nr_button; ++i) {
+        int channel_count = relay_button_channel[i].channel;
         String button = "button_set";
         button += i;
-        save_supla_button_type(i, httpServer.arg(button));
+
+        String type = httpServer.arg(button);
+        save_supla_button_type(i, type);
+
+        if (type.toInt() == INPUT_TYPE_BTN_DURATION) {
+          String button_duration = "button_duration_set";
+          button_duration += i;
+
+          String duration = httpServer.arg(button_duration);
+          save_supla_button_duration(i, duration);
+
+          SuplaDevice.channel_pin[channel_count].DurationMS = (duration.toInt() * 1000);
+          SuplaDevice.channel_pin[channel_count].type = INPUT_TYPE_BTN_MONOSTABLE;
+        } else {
+          SuplaDevice.channel_pin[channel_count].type = type.toInt();
+          SuplaDevice.channel_pin[channel_count].DurationMS = 0;
+        }
       }
     }
     if (nr_relay > 0) {
-      for (int i = 1; i <= nr_relay; ++i) {
+      for (int i = 0; i < nr_relay; ++i) {
         String relay = "relay_set";
         relay += i;
-        save_supla_relay_flag(i, httpServer.arg(relay));
+        String flag = httpServer.arg(relay);
+        save_supla_relay_flag(i, flag);
+        int channel_count = relay_button_channel[i].channel;
+        SuplaDevice.channel_pin[channel_count].flag = flag.toInt();
       }
     }
     if (nr_ds18b20 > 0) {
@@ -570,8 +591,9 @@ double get_temperature(int channelNumber, double last_val) {
 }
 
 void supla_led_blinking_func(void *timer_arg) {
+  uint8_t _led_config_invert = led_config_invert ? LOW : HIGH;
   int val = digitalRead(LED_CONFIG_PIN);
-  digitalWrite(LED_CONFIG_PIN, val == led_config_invert ? LOW : HIGH);
+  digitalWrite(LED_CONFIG_PIN, val == (_led_config_invert  ? LOW : HIGH));
 }
 
 void supla_led_blinking(int led, int time) {
@@ -590,11 +612,8 @@ void supla_led_blinking_stop(void) {
 void supla_led_set(int ledPin, bool hiIsLo) {
   led_config_invert = hiIsLo;
 
-  uint8_t _HI = hiIsLo ? LOW : HIGH;
-  uint8_t _LO = hiIsLo ? HIGH : LOW;
-
   pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, _HI ? 1 : 0);
+  digitalWrite(ledPin, led_config_invert ? LOW : HIGH);
 }
 
 void supla_ds18b20_channel_start(void) {
@@ -664,25 +683,78 @@ void add_Config(int pin) {
 }
 
 void add_Relay(int relay) {
+  //SuplaDevice.addRelay(relay);
+  int channel = SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay));
+
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 0;
   nr_relay++;
-  //SuplaDevice.addRelay(relay);
-  SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay));
 }
 
 void add_Relay_Invert(int relay) {
+  //SuplaDevice.addRelay(relay, true);
+  int channel = SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay), true);
+
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 1;
   nr_relay++;
-  //SuplaDevice.addRelay(relay, true);
-  SuplaDevice.addRelayButton(relay, -1, 0, read_supla_relay_flag(nr_relay), true);
+}
+
+
+void add_Relay_Button(int relay, int button, int type) {
+  return add_Relay_Button(relay, button, type, 0);
+}
+
+void add_Relay_Button_Invert(int relay, int button, int type) {
+  return add_Relay_Button_Invert(relay, button, type, 0);
+}
+
+void add_Relay_Button(int relay, int button, int type, int DurationMS) {
+  if (type == CHOICE_TYPE) {
+    int select_button = read_supla_button_type(nr_button);
+    type = select_button;
+
+    if (type == INPUT_TYPE_BTN_DURATION) {
+      DurationMS = read_supla_button_duration(nr_button);
+      DurationMS = DurationMS * 1000;
+      type = INPUT_TYPE_BTN_MONOSTABLE;
+    }
+    nr_button++;
+  }
+
+  int c = SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), DurationMS);
+
+  relay_button_channel[nr_relay].relay = relay;
+  relay_button_channel[nr_relay].invert = 0;
+  relay_button_channel[nr_relay].channel = c;
+  nr_relay++;
+}
+
+void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
+  if (type == CHOICE_TYPE) {
+    int select_button = read_supla_button_type(nr_button);
+    type = select_button;
+
+    if (type == INPUT_TYPE_BTN_DURATION) {
+      DurationMS = read_supla_button_duration(nr_button);
+      DurationMS = DurationMS * 1000;
+      type = INPUT_TYPE_BTN_MONOSTABLE;
+    }
+    nr_button++;
+  }
+
+  int c = SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true, DurationMS);
+
+  relay_button_channel[nr_relay].relay = relay;
+  relay_button_channel[nr_relay].invert = 1;
+  relay_button_channel[nr_relay].channel = c;
+  nr_relay++;
 }
 
 void add_DHT11_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDHT11();
   if (nr_dht == 0) {
-    dht_sensor = (DHT*)malloc(sizeof(DHT) * MAX_DHT);
+    dht_sensor = (DHT*)realloc(dht_sensor, sizeof(DHT) * nr_dht + 1);
     dht_channel_first = channel;
   }
 
@@ -694,7 +766,7 @@ void add_DHT11_Thermometer(int thermpin) {
 void add_DHT22_Thermometer(int thermpin) {
   int channel = SuplaDevice.addDHT22();
   if (nr_dht == 0) {
-    dht_sensor = (DHT*)malloc(sizeof(DHT) * MAX_DHT);
+    dht_sensor = (DHT*)realloc(dht_sensor, sizeof(DHT) * nr_dht + 1);
     dht_channel_first = channel;
   }
 
@@ -736,42 +808,6 @@ void add_BME280_Sensor() {
 
   bme_channel.elevation = read_bme_elevation();
   nr_bme++;
-}
-
-void add_Relay_Button(int relay, int button, int type) {
-  return add_Relay_Button(relay, button, type, 0);
-}
-
-void add_Relay_Button_Invert(int relay, int button, int type) {
-  return add_Relay_Button_Invert(relay, button, type, 0);
-}
-
-void add_Relay_Button(int relay, int button, int type, int DurationMS) {
-  relay_button_channel[nr_relay].relay = relay;
-  relay_button_channel[nr_relay].invert = 0;
-
-  nr_relay++;
-  if (type == CHOICE_TYPE) {
-    nr_button++;
-    int select_button = read_supla_button_type(nr_button);
-    type = select_button;
-  }
-
-  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), DurationMS);
-}
-
-void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
-  relay_button_channel[nr_relay].relay = relay;
-  relay_button_channel[nr_relay].invert = 1;
-
-  nr_relay++;
-  if (type == CHOICE_TYPE) {
-    nr_button++;
-    int select_button = read_supla_button_type(nr_button);
-    type = select_button;
-  }
-
-  SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true, DurationMS);
 }
 
 void add_Oled() {

@@ -1,3 +1,4 @@
+
 #ifndef SUPLA_SETTINGS_H
 #define SUPLA_SETTINGS_H
 
@@ -39,6 +40,8 @@
 #define  MAX_RELAY_STATE     16
 #define  MAX_DS18B20_SIZE    16
 #define  MAX_DS18B20_NAME    8
+#define  MAX_BME_ELEVATION   4
+#define  MAX_BUTTON_DURATION 4
 
 
 #define  GUI_BLUE              "#005c96"

@@ -18,6 +18,7 @@ extern const char* Config_Wifi_pass;
 
 typedef struct {
   int relay;
+  int channel;
   int invert;
 } _relay_button_channel;
 extern _relay_button_channel relay_button_channel[];

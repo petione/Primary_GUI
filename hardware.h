@@ -1,10 +1,10 @@
 //#define ARDUINO_OTA
 
-#define SONOFF_BASIC_CWU
+//#define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
 //#define SONOFF_TOUCH_2GANG
+#define SONOFF_TOUCH_2GANG_ESP8285
 //#define SONOFF_TOUCH_3GANG_ESP8285
-
 
 
 //SONOFF_BASIC_CWU *******************************************************************************
@@ -39,6 +39,21 @@
 
 #define LED_CONFIG_PIN        16
 #define CONFIG_PIN            14
+
+//SONOFF_TOUCH_2GANG_ESP8285***********************************************************************
+#elif defined(SONOFF_TOUCH_2GANG_ESP8285)
+#define DEFAULT_HOSTNAME      "SONOFF TOUCH 2GANG"
+
+#define RELAY1_PIN            12
+#define BUTTON1_PIN           0
+
+#define RELAY2_PIN            5
+#define BUTTON2_PIN           9
+
+#define LED_CONFIG_PIN        13
+#define CONFIG_PIN            0
+
+#define DS18B20_PIN           3
 
 //SONOFF_TOUCH_3GANG_ESP8285********************************************************************************
 #elif defined(SONOFF_TOUCH_3GANG_ESP8285)

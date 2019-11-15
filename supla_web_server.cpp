@@ -32,9 +32,10 @@ _supla_status supla_status;
 //supla_status.old_status_msg = "";
 
 
-const char * Supported_Button[2] = {
+const char * Supported_Button[3] = {
   "Bistabilny",
-  "Monostabilny"
+  "Monostabilny",
+  "Automat schodowy"
 };
 
 const char * Supported_RelayFlag[2] = {
@@ -316,21 +317,21 @@ String supla_webpage_start(int save) {
     //  else content += "--.--";
     //  content += "<b>hPa</b>";
     content += "</label></i>";
-/*
-    content += "<i><label>";
-    content += "Ciśn. bezwzgl. ";
-    if (pressure != -275) content += pressure;
-    else content += "--.--";
-    content += "<b>hPa </b> ";
-    content += "</label></i>";
+    /*
+        content += "<i><label>";
+        content += "Ciśn. bezwzgl. ";
+        if (pressure != -275) content += pressure;
+        else content += "--.--";
+        content += "<b>hPa </b> ";
+        content += "</label></i>";
 
-    content += "<i><label>";
-    content += "Ciśnienie ";
-    if (pressure_sea != -275) content += pressure_sea;
-    else content += "--.--";
-    content += "<b>hPa </b> ";
-    content += "</label></i>";
-*/
+        content += "<i><label>";
+        content += "Ciśnienie ";
+        if (pressure_sea != -275) content += pressure_sea;
+        else content += "--.--";
+        content += "<b>hPa </b> ";
+        content += "</label></i>";
+    */
 
     content += "<i><input name='pom1' value='" + String(pressure) + "' readonly><label style='left: calc(100% - 255px)'>hPa</label>";
     content += "<label>";
@@ -341,7 +342,7 @@ String supla_webpage_start(int save) {
     content += "<label>";
     content += "Ciśnienie";
     content += "</label></i>";
-    
+
 
     content += "<i><input name='bme_elevation' type='number' step='1' min='-1000' max='1000' ";
     content += "value='" + String(bme_channel.elevation) + "'><label>";
@@ -355,17 +356,18 @@ String supla_webpage_start(int save) {
     content += "<div class='w'>";
     content += "<h3>Ustawienia modułu</h3>";
     if (nr_button > 0) {
-      for (int i = 1; i <= nr_button; ++i) {
+      for (int i = 0; i < nr_button; ++i) {
+        int select_button = read_supla_button_type(i);
         content += "<i><label>Przycisk ";
-        content += i;
+        content += i + 1;
         content += "</label><select name='button_set";
         content += i;
         content += "'>";
 
-        for (int suported_button = 0; suported_button < 2; suported_button++) {
+        for (int suported_button = 0; suported_button < 3; suported_button++) {
           content += "<option value='";
           content += suported_button;
-          int select_button = read_supla_button_type(i);
+
           if (select_button == suported_button) {
             content += "' selected>";
           }
@@ -373,15 +375,25 @@ String supla_webpage_start(int save) {
           content += (Supported_Button[suported_button]);
         }
         content += "</select></i>";
+
+        if (select_button == 2) { //automat schodowy
+          content += "<i><input name='button_duration_set";
+          content += i;
+          content += "' input type='number' step='0.5' min='0.5' max='3600'";
+          content += "value='" + String(read_supla_button_duration(i)) + "'><label>";
+          content += "Czas załączenia ";
+          content += i + 1;
+          content += " [s]</label></i>";
+        }
       }
     }
     if (nr_relay > 0) {
-      for (int i = 1; i <= nr_relay; ++i) {
-        byte v = digitalRead(relay_button_channel[i - 1].relay);
-        if (relay_button_channel[i - 1].invert == 1) v ^= 1;
+      for (int i = 0; i < nr_relay; ++i) {
+        byte v = digitalRead(relay_button_channel[i].relay);
+        if (relay_button_channel[i].invert == 1) v ^= 1;
         content += "<i><label ";
         content += ">Przekaźnik ";
-        content += i;
+        content += i + 1;
         if (v == 1) content += " <font color='red' style='background-color:red'>##</font>";
         content += "</label><select name='relay_set";
         content += i;

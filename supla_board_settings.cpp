@@ -1,4 +1,7 @@
-//  CHOICE_TYPE 0-BISTABILNY 1-MONOSTABILNY
+//  CHOICE_TYPE 0-BISTABILNY 1-MONOSTABILNY 2-AUTOMAT SCHODOWY
+//INPUT_TYPE_BTN_BISTABLE     0 
+//INPUT_TYPE_BTN_MONOSTABLE   1 
+//INPUT_TYPE_BTN_DURATION     2 
 //  add_Relay_Button(13, 0, CHOICE_TYPE);
 //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
@@ -71,19 +74,27 @@ void supla_board_configuration(void) {
   //add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
+  //SONOFF_TOUCH_2GANG_ESP8285***********************************************************************
+#elif defined(SONOFF_TOUCH_2GANG_ESP8285)
+
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
+  add_DS18B20_Thermometer(DS18B20_PIN);
+  add_Led_Config_Invert(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+
   //SONOFF_TOUCH_3GANG_ESP8285***********************************************************************
 #elif defined(SONOFF_TOUCH_3GANG_ESP8285)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
-  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, 1);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, CHOICE_TYPE);
   add_DS18B20_Thermometer(DS18B20_PIN);
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
 #else
   add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
-
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
   // Allow users to define new settings without migration config

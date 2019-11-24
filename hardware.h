@@ -51,7 +51,7 @@
 #define BUTTON2_PIN           9
 
 #define LED_CONFIG_PIN        13
-#define CONFIG_PIN            0
+#define CONFIG_PIN            9
 
 #define DS18B20_PIN           3
 
@@ -70,7 +70,7 @@
 #define BUTTON3_PIN           10
 
 #define LED_CONFIG_PIN        13
-#define CONFIG_PIN            0
+#define CONFIG_PIN            9
 
 #define DS18B20_PIN           3
 

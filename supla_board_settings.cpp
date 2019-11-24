@@ -1,7 +1,6 @@
-//  CHOICE_TYPE 0-BISTABILNY 1-MONOSTABILNY 2-AUTOMAT SCHODOWY
-//INPUT_TYPE_BTN_BISTABLE     0 
-//INPUT_TYPE_BTN_MONOSTABLE   1 
-//INPUT_TYPE_BTN_DURATION     2 
+//  CHOICE_TYPE: 0-BISTABILNY 1-MONOSTABILNY 2-AUTOMAT SCHODOWY
+//INPUT_TYPE_BTN_BISTABLE     0
+//INPUT_TYPE_BTN_MONOSTABLE   1
 //  add_Relay_Button(13, 0, CHOICE_TYPE);
 //  add_Relay_Button_Invert(13, 12, CHOICE_TYPE);
 
@@ -51,11 +50,12 @@ void supla_board_configuration(void) {
   //SONOFF_BASIC_CWU *****************************************************************************
 #if defined(SONOFF_BASIC_CWU)
 
-  add_Relay_Button(RELAY_PIN, BUTTON_PIN, 1);
-  add_Relay(VIRTUAL_PIN_LOCK);
+  add_Relay(RELAY_PIN);
+  add_Relay_Button(VIRTUAL_PIN_LOCK, BUTTON_PIN, 1);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
+  digitalWrite(RELAY_PIN, 1);
   SuplaDevice.setDigitalReadFuncImpl(&supla_DigitalRead);
   SuplaDevice.setDigitalWriteFuncImpl(&supla_DigitalWrite);
 
@@ -69,32 +69,32 @@ void supla_board_configuration(void) {
   //SONOFF_TOUCH_2GANG*****************************************************************************
 #elif defined(SONOFF_TOUCH_2GANG)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
-  //add_Led_Config(LED_CONFIG_PIN);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+  add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
   //SONOFF_TOUCH_2GANG_ESP8285***********************************************************************
 #elif defined(SONOFF_TOUCH_2GANG_ESP8285)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
-  add_DS18B20_Thermometer(DS18B20_PIN);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+  //add_DS18B20_Thermometer(DS18B20_PIN);
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
   //SONOFF_TOUCH_3GANG_ESP8285***********************************************************************
 #elif defined(SONOFF_TOUCH_3GANG_ESP8285)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, CHOICE_TYPE);
-  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, 1);
   add_DS18B20_Thermometer(DS18B20_PIN);
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
 #else
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
   // Allow users to define new settings without migration config
@@ -116,7 +116,7 @@ int supla_DigitalRead(int channelNumber, uint8_t pin) {
 }
 
 void supla_DigitalWrite(int channelNumber, uint8_t pin, uint8_t val) {
-  if (pin == VIRTUAL_PIN_LOCK) {
+  if (pin == VIRTUAL_PIN_LOCK && state_lock != val) {
     state_lock = 1;
     SuplaDevice.channelValueChanged(channelNumber, val);
     val ? SuplaDevice.relayOn(0, 0) : SuplaDevice.relayOff(0);

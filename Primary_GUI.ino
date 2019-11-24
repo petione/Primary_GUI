@@ -1,3 +1,4 @@
+
 /* *************************************************************************
 
    Dzieki kolegom @wojtas567 i @Duch__ powstała ta wersja.
@@ -263,6 +264,18 @@ void supla_arduino_eth_setup(uint8_t mac[6], IPAddress *ip) {
 }
 
 void supla_timer() {
+  if (nr_relay > 0 ) {
+    for (int i = 0; i < nr_relay; ++i) {
+      int channel_count = relay_button_channel[i].channel;
+
+      if (SuplaDevice.channel_pin[channel_count].DurationMS != relay_button_channel[i].DurationMS) {
+        int durationMS = SuplaDevice.channel_pin[channel_count].DurationMS;
+
+        save_supla_button_duration(i, durationMS);
+        relay_button_channel[i].DurationMS = durationMS;
+      }
+    }
+  }
 
 }
 
@@ -319,20 +332,8 @@ void createWebServer() {
 
         String type = httpServer.arg(button);
         save_supla_button_type(i, type);
+        SuplaDevice.channel_pin[channel_count].type = type.toInt();
 
-        if (type.toInt() == INPUT_TYPE_BTN_DURATION) {
-          String button_duration = "button_duration_set";
-          button_duration += i;
-
-          String duration = httpServer.arg(button_duration);
-          save_supla_button_duration(i, duration);
-
-          SuplaDevice.channel_pin[channel_count].DurationMS = (duration.toInt() * 1000);
-          SuplaDevice.channel_pin[channel_count].type = INPUT_TYPE_BTN_MONOSTABLE;
-        } else {
-          SuplaDevice.channel_pin[channel_count].type = type.toInt();
-          SuplaDevice.channel_pin[channel_count].DurationMS = 0;
-        }
       }
     }
     if (nr_relay > 0) {
@@ -593,7 +594,7 @@ double get_temperature(int channelNumber, double last_val) {
 void supla_led_blinking_func(void *timer_arg) {
   uint8_t _led_config_invert = led_config_invert ? LOW : HIGH;
   int val = digitalRead(LED_CONFIG_PIN);
-  digitalWrite(LED_CONFIG_PIN, val == (_led_config_invert  ? LOW : HIGH));
+  digitalWrite(LED_CONFIG_PIN, val == _led_config_invert  ? 0 : 1);
 }
 
 void supla_led_blinking(int led, int time) {
@@ -713,20 +714,18 @@ void add_Relay_Button(int relay, int button, int type, int DurationMS) {
   if (type == CHOICE_TYPE) {
     int select_button = read_supla_button_type(nr_button);
     type = select_button;
-
-    if (type == INPUT_TYPE_BTN_DURATION) {
-      DurationMS = read_supla_button_duration(nr_button);
-      DurationMS = DurationMS * 1000;
-      type = INPUT_TYPE_BTN_MONOSTABLE;
-    }
     nr_button++;
   }
+
+  if ( DurationMS == 0)
+    DurationMS = read_supla_button_duration(nr_button);
 
   int c = SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), DurationMS);
 
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 0;
   relay_button_channel[nr_relay].channel = c;
+  relay_button_channel[nr_relay].DurationMS = DurationMS;
   nr_relay++;
 }
 
@@ -734,20 +733,18 @@ void add_Relay_Button_Invert(int relay, int button, int type, int DurationMS) {
   if (type == CHOICE_TYPE) {
     int select_button = read_supla_button_type(nr_button);
     type = select_button;
-
-    if (type == INPUT_TYPE_BTN_DURATION) {
-      DurationMS = read_supla_button_duration(nr_button);
-      DurationMS = DurationMS * 1000;
-      type = INPUT_TYPE_BTN_MONOSTABLE;
-    }
     nr_button++;
   }
+
+  if ( DurationMS == 0)
+    DurationMS = read_supla_button_duration(nr_button);
 
   int c = SuplaDevice.addRelayButton(relay, button, type, read_supla_relay_flag(nr_relay), true, DurationMS);
 
   relay_button_channel[nr_relay].relay = relay;
   relay_button_channel[nr_relay].invert = 1;
   relay_button_channel[nr_relay].channel = c;
+  relay_button_channel[nr_relay].DurationMS = DurationMS;
   nr_relay++;
 }
 

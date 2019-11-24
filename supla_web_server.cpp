@@ -34,8 +34,7 @@ _supla_status supla_status;
 
 const char * Supported_Button[3] = {
   "Bistabilny",
-  "Monostabilny",
-  "Automat schodowy"
+  "Monostabilny"
 };
 
 const char * Supported_RelayFlag[2] = {
@@ -364,7 +363,7 @@ String supla_webpage_start(int save) {
         content += i;
         content += "'>";
 
-        for (int suported_button = 0; suported_button < 3; suported_button++) {
+        for (int suported_button = 0; suported_button < 2; suported_button++) {
           content += "<option value='";
           content += suported_button;
 
@@ -375,16 +374,6 @@ String supla_webpage_start(int save) {
           content += (Supported_Button[suported_button]);
         }
         content += "</select></i>";
-
-        if (select_button == 2) { //automat schodowy
-          content += "<i><input name='button_duration_set";
-          content += i;
-          content += "' input type='number' step='0.5' min='0.5' max='3600'";
-          content += "value='" + String(read_supla_button_duration(i)) + "'><label>";
-          content += "Czas załączenia ";
-          content += i + 1;
-          content += " [s]</label></i>";
-        }
       }
     }
     if (nr_relay > 0) {

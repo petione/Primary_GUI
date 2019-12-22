@@ -79,7 +79,10 @@ void supla_board_configuration(void) {
 
   add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
   add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+
+  add_DHT22_Thermometer(DHT22_PIN);
   //add_DS18B20_Thermometer(DS18B20_PIN);
+  
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
@@ -90,11 +93,14 @@ void supla_board_configuration(void) {
   add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
   add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, 1);
   add_DS18B20_Thermometer(DS18B20_PIN);
+  
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
 #else
   add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
+  //add_DS18B20_Thermometer(DS18B20_PIN);
+  
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
   // Allow users to define new settings without migration config

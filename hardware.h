@@ -3,7 +3,7 @@
 //#define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
 //#define SONOFF_TOUCH_2GANG
-#define SONOFF_TOUCH_2GANG_ESP8285
+//#define SONOFF_TOUCH_2GANG_ESP8285
 //#define SONOFF_TOUCH_3GANG_ESP8285
 
 
@@ -53,6 +53,7 @@
 #define LED_CONFIG_PIN        13
 #define CONFIG_PIN            9
 
+#define DHT22_PIN             3
 #define DS18B20_PIN           3
 
 //SONOFF_TOUCH_3GANG_ESP8285********************************************************************************
@@ -84,6 +85,9 @@
 
 #define LED_CONFIG_PIN        2
 #define CONFIG_PIN            0
+
+#define DS18B20_PIN           3
+
 // Allow users to define new settings without migration config
 //#error "UNSUPPORTED HARDWARE!"
 

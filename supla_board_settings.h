@@ -33,8 +33,6 @@ typedef struct {
   int type; //0-single 1-multi
   DeviceAddress deviceAddress;
   double last_val;
-  long lastTemperatureRequest;
-  bool TemperatureRequestInProgress;
 } _ds18b20_channel_t;
 extern _ds18b20_channel_t ds18b20_channel[];
 

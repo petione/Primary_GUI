@@ -32,14 +32,16 @@ _supla_status supla_status;
 //supla_status.old_status_msg = "";
 
 
-const char * Supported_Button[3] = {
+const char * Supported_Button[2] = {
   "Bistabilny",
   "Monostabilny"
 };
 
-const char * Supported_RelayFlag[2] = {
+const char * Supported_RelayFlag[4] = {
   "Reset",
-  "Pamiętaj stan"
+  "Pamiętaj stan",
+  "Włączony",
+  "Wyłączony"
 };
 
 String supla_webpage_upddate(void) {
@@ -79,7 +81,7 @@ String supla_webpage_search(int save) {
   }
   content += "<div class='s'>";
   content += getLogoSupla();
-  content += "<h1><center>" + String(read_supla_hostname().c_str()) + "</center></h1>";
+  content += "<h1><center>" + String(read_supla_hostname().c_str()) + " by krycha</center></h1>";
   content += "<br>";
   content += "<center>";
   if (nr_ds18b20 > 0) {
@@ -88,7 +90,7 @@ String supla_webpage_search(int save) {
     for (int i = 0; i < nr_ds18b20; i++) {
       double temp = get_temperature(ds18b20_channel[i].channel, 0);
 
-      content += "<i><input name='ds18b20_channel_id_";
+      content += "<i><input name='ds18b20_";
       content += i;
       content += "' value='" + String(ds18b20_channel[i].address.c_str()) + "' maxlength=";
       content += MAX_DS18B20_SIZE;
@@ -106,28 +108,30 @@ String supla_webpage_search(int save) {
 
   DeviceAddress tempSensor;
   int numberOfDevices = 0; //Number of temperature devices found
+  content += "<form method='post' action='setup'>";
   content += "<div class='w'>";
-  content += "<h3>Znalezione DS18b20</h3>";
-  numberOfDevices = sensor[0].getDeviceCount();
-  if (numberOfDevices != 0) {
-    for (int i = 0; i < nr_ds18b20; i++) {
-      // Search the wire for address
-      if ( sensor[i].getAddress(tempSensor, i) ) {
-        content += "<i><input value='" + GetAddressToString(tempSensor) + "' length=";
-        content += MAX_DS18B20_SIZE;
-        content += " readonly><label></i>";
-      }
+  content += "<h3>Znalezione ds18b20_channel</h3>";
+  for (int i = 0; i < MAX_DS18B20; i++) {
+    // Search the wire for address
+    if ( sensor[i].getAddress(tempSensor, i) ) {
+      content += "<i><input name='ds18b20_id_";
+      content += i;
+      content += "' value='" + GetAddressToString(tempSensor) + "' maxlength=";
+      content += MAX_DS18B20_SIZE;
+      content += " readonly><label></i>";
+      numberOfDevices++;
     }
-  } else {
-    content += "<i><label>brak podłączonych czujników</label></i>";
   }
+  if (numberOfDevices == 0)
+    content += "<i><label>brak podłączonych czujników</label></i>";
+
   content += "</div>";
 
   content += "</center>";
-  content += "<form method='post' action='setup'>";
   content += "<button type='submit'>Zapisz znalezione DSy</button></form>";
-  content += "<br>";
+  content += "<br><br>";
   content += "<a href='/'><button>Powrót</button></a></div>";
+  content += "<a target='_blank' rel='noopener noreferrer' href='https://forum.supla.org/viewtopic.php?f=11&t=5276'><span style='color: #ffffff !important;'>https://forum.supla.org/</span></a>";
   content += "<br><br>";
 
   return content;

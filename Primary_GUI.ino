@@ -451,9 +451,10 @@ void WiFi_up() {
     Serial.println("WiFi init ");
     if ( esid != 0 || epass != 0 ) {
       if (Modul_tryb_konfiguracji == 0) {
-        WiFi.mode(WIFI_STA);
+        Serial.println("Creating STA");
+        Serial.print("Setting mode ... ");
+        Serial.println(WiFi.mode(WIFI_STA) ? "Ready" : "Failed!");
         supla_led_blinking(LED_CONFIG_PIN, 500);
-        WiFi.disconnect(true);
       }
       Serial.print("SSID: ");
       Serial.println(esid);
@@ -516,6 +517,9 @@ void supla_start() {
   WiFi.hostname(supla_hostname);
   WiFi.disconnect(true);// delete old config
   delay(1000);
+  WiFi.setAutoConnect(false);
+  WiFi.setPhyMode(WIFI_PHY_MODE_11B);
+  WiFi.setOutputPower(20.5);
   WiFi.onEvent(WiFiEvent);
 
 

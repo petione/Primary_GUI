@@ -1,5 +1,8 @@
 //#define ARDUINO_OTA
 
+#define SDA 4 //-->D2
+#define SCL 5 //-->D1
+
 //#define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
 //#define SONOFF_TOUCH_2GANG

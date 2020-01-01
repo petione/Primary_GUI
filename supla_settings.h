@@ -69,6 +69,7 @@ void add_DHT11_Thermometer(int thermpin);
 void add_DHT22_Thermometer(int thermpin);
 void add_DS18B20_Thermometer(int thermpin);
 void add_BME280_Sensor();
+void add_SHT_Sensor();
 void add_Relay_Button(int relay, int button, int type);
 void add_Relay_Button_Invert(int relay, int button, int type);
 void add_Relay_Button(int relay, int button, int type, int DurationMS);

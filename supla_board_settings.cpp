@@ -23,6 +23,7 @@
 // add_DHT11_Thermometer(12);
 // add_DHT22_Thermometer(4);
 // add_BME280_Sensor(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
+// add_SHT_Sensor();
 
 // add_Oled(); //SDA GPIO4; SCL GPIO5 -->supla_settings.h
 // add_Led_Config(LED_CONFIG_PIN);
@@ -100,7 +101,7 @@ void supla_board_configuration(void) {
 #else
   add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
   //add_DS18B20_Thermometer(DS18B20_PIN);
-  
+  add_SHT_Sensor();
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
   // Allow users to define new settings without migration config

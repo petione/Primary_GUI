@@ -3,6 +3,8 @@
 #ifndef SUPLA_BOARD_SETTINGS_H
 #define SUPLA_BOARD_SETTINGS_H
 
+#define TYPE_SENSOR_DHT 0
+#define TYPE_SENSOR_SHT 1
 
 extern int nr_button;
 extern int nr_relay;
@@ -51,6 +53,7 @@ typedef struct {
   int channel;
   double temp;
   double humidity;
+  int type; //0-DHT 1-SHT
 } _dht_channel;
 extern _dht_channel dht_channel[];
 

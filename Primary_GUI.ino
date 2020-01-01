@@ -1,10 +1,7 @@
 
 /* *************************************************************************
 
-   Dzieki kolegom @wojtas567 i @Duch__ powstała ta wersja.
-
-
-   Wszystkie potrzebne modyfikacja znajdują się w pliku "supla_settings.h"
+   Wszystkie potrzebne modyfikacja znajdują się w pliku "supla_board_settings.cpp"
 
  * *************************************************************************
 */
@@ -24,6 +21,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <DHT.h>
+#include "SHTSensor.h"
 
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
@@ -88,16 +86,9 @@ ETSTimer led_timer;
 // Setup a DHT instance
 //DHT dht(DHTPIN, DHTTYPE);
 DHT* dht_sensor;
-/*DHT dht_sensor[MAX_DHT] = {
-  { -1, -1 },
-  { -1, -1 },
-  { -1, -1 },
-  { -1, -1 },
-  { -1, -1 },
-  { -1, -1 },
-  { -1, -1 },
-  { -1, -1 },
-  };*/
+SHTSensor sht;
+// To use a specific sensor instead of probing the bus use this command:
+// SHTSensor sht(SHTSensor::SHT3X);
 
 // Setup a DS18B20 instance
 OneWire ds18x20[MAX_DS18B20] = 0;
@@ -133,13 +124,6 @@ void setup() {
   SuplaDevice.setStatusFuncImpl(&status_func);
   SuplaDevice.setTimerFuncImpl(&supla_timer);
 
-  supla_board_configuration();
-
-  supla_ds18b20_channel_start();
-  supla_dht_start();
-  supla_bme_start();
-  supla_start();
-
   if (drd.detectDoubleReset()) {
     drd.stop();
     gui_color = GUI_GREEN;
@@ -149,6 +133,14 @@ void setup() {
   else gui_color = GUI_BLUE;
 
   delay(5000);
+
+  supla_board_configuration();
+
+  supla_ds18b20_channel_start();
+  supla_dht_start();
+  supla_bme_start();
+  supla_start();
+  supla_sht_start();
 
   if (String(read_wifi_ssid().c_str()) == 0
       || String(read_wifi_pass().c_str()) == 0
@@ -561,7 +553,8 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
 
   } else {
     int i = channelNumber - dht_channel_first;
-    if (dht_channel[i].channel == channelNumber) {
+
+    if (dht_channel[i].type == TYPE_SENSOR_DHT) {
       *temp = dht_sensor[i].readTemperature();
       *humidity = dht_sensor[i].readHumidity();
 
@@ -573,6 +566,14 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
       dht_channel[i].temp = *temp;
       dht_channel[i].humidity = *humidity;
       //  Serial.print("get_temperature_and_humidity - "); Serial.print(channelNumber); Serial.print(" -- "); Serial.print(*temp); Serial.print(" -- "); Serial.println(*humidity);
+    } else if (dht_channel[i].type == TYPE_SENSOR_SHT) {
+      if (sht.readSample()) {
+        *temp = sht.getTemperature();
+        *humidity = sht.getHumidity();
+      } else {
+        *temp = -275;
+        *humidity = -1;
+      }
     }
   }
 }
@@ -656,7 +657,26 @@ void supla_ds18b20_channel_start(void) {
 void supla_dht_start(void) {
   if (nr_dht > 0 ) {
     for (int i = 0; i < nr_dht; i++) {
-      dht_sensor[i].begin();
+      if (dht_channel[i].type == TYPE_SENSOR_DHT) {
+        dht_sensor[i].begin();
+      }
+    }
+  }
+}
+
+void supla_sht_start(void) {
+  if (nr_dht > 0 ) {
+    for (int i = 0; i < nr_dht; i++) {
+      if (dht_channel[i].type == TYPE_SENSOR_SHT) {
+        Wire.begin(SDA, SCL);
+
+        if (sht.init()) {
+          Serial.print("init SHT: success\n");
+        } else {
+          Serial.print("init SHT: failed\n");
+        }
+        sht.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM); // only supported by SHT3x
+      }
     }
   }
 }
@@ -771,7 +791,8 @@ void add_DHT11_Thermometer(int thermpin) {
   dht_sensor = (DHT*)realloc(dht_sensor, sizeof(DHT) * (nr_dht + 1));
 
   dht_sensor[nr_dht] = { thermpin, DHT11 };
-  dht_channel[nr_dht].channel = channel;
+  //dht_channel[nr_dht].channel = channel;
+  dht_channel[nr_dht].type = TYPE_SENSOR_DHT;
   nr_dht++;
 }
 
@@ -782,7 +803,16 @@ void add_DHT22_Thermometer(int thermpin) {
   dht_sensor = (DHT*)realloc(dht_sensor, sizeof(DHT) * (nr_dht + 1));
 
   dht_sensor[nr_dht] = { thermpin, DHT22 };
-  dht_channel[nr_dht].channel = channel;
+  //dht_channel[nr_dht].channel = channel;
+  dht_channel[nr_dht].type = TYPE_SENSOR_DHT;
+  nr_dht++;
+}
+
+void add_SHT_Sensor() {
+  int channel = SuplaDevice.addDHT22();
+  if (nr_dht == 0) dht_channel_first = channel;
+
+  dht_channel[nr_dht].type = TYPE_SENSOR_SHT;
   nr_dht++;
 }
 

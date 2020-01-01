@@ -791,7 +791,7 @@ void add_DHT11_Thermometer(int thermpin) {
   dht_sensor = (DHT*)realloc(dht_sensor, sizeof(DHT) * (nr_dht + 1));
 
   dht_sensor[nr_dht] = { thermpin, DHT11 };
-  //dht_channel[nr_dht].channel = channel;
+  dht_channel[nr_dht].channel = channel;
   dht_channel[nr_dht].type = TYPE_SENSOR_DHT;
   nr_dht++;
 }
@@ -803,7 +803,7 @@ void add_DHT22_Thermometer(int thermpin) {
   dht_sensor = (DHT*)realloc(dht_sensor, sizeof(DHT) * (nr_dht + 1));
 
   dht_sensor[nr_dht] = { thermpin, DHT22 };
-  //dht_channel[nr_dht].channel = channel;
+  dht_channel[nr_dht].channel = channel;
   dht_channel[nr_dht].type = TYPE_SENSOR_DHT;
   nr_dht++;
 }
@@ -812,6 +812,7 @@ void add_SHT_Sensor() {
   int channel = SuplaDevice.addDHT22();
   if (nr_dht == 0) dht_channel_first = channel;
 
+  dht_channel[nr_dht].channel = channel;
   dht_channel[nr_dht].type = TYPE_SENSOR_SHT;
   nr_dht++;
 }

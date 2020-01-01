@@ -124,16 +124,6 @@ void setup() {
   SuplaDevice.setStatusFuncImpl(&status_func);
   SuplaDevice.setTimerFuncImpl(&supla_timer);
 
-  if (drd.detectDoubleReset()) {
-    drd.stop();
-    gui_color = GUI_GREEN;
-    Modul_tryb_konfiguracji = 2;
-    Tryb_konfiguracji();
-  }
-  else gui_color = GUI_BLUE;
-
-  delay(5000);
-
   supla_board_configuration();
 
   supla_ds18b20_channel_start();
@@ -141,6 +131,14 @@ void setup() {
   supla_bme_start();
   supla_start();
   supla_sht_start();
+
+  if (drd.detectDoubleReset()) {
+    drd.stop();
+    gui_color = GUI_GREEN;
+    Modul_tryb_konfiguracji = 2;
+    Tryb_konfiguracji();
+  }
+  else gui_color = GUI_BLUE;
 
   if (String(read_wifi_ssid().c_str()) == 0
       || String(read_wifi_pass().c_str()) == 0

@@ -508,11 +508,11 @@ void status_func(int status, const char *msg) {
   }
 
   static int lock;
-  if (status == 17) {
+  if (status == 17 && Modul_tryb_konfiguracji == 0) {
     supla_led_blinking_stop();
     lock = 0;
   }
-  else if (status != 17 && lock == 0) {
+  else if (status != 17 && lock == 0 && Modul_tryb_konfiguracji == 0) {
     supla_led_blinking(LED_CONFIG_PIN, 500);
     lock = 1;
   }

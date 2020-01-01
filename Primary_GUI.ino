@@ -110,8 +110,6 @@ void setup() {
   Serial.begin(74880);
   EEPROM.begin(EEPROM_SIZE);
 
-  client.setTimeout(500);
-
   if ('2' == char(EEPROM.read(EEPROM_SIZE - 1))) {
     czyszczenieEeprom();
     first_start();
@@ -162,7 +160,6 @@ void setup() {
 #if defined(ARDUINO_OTA)
   arduino_OTA_start();
 #endif
-
 }
 
 //*********************************************************************************************************
@@ -181,7 +178,7 @@ void loop() {
 #if defined(ARDUINO_OTA)
   ArduinoOTA.handle();
 #endif
-
+  drd.loop();
 }
 //*********************************************************************************************************
 
@@ -509,6 +506,8 @@ void supla_start() {
 
   read_guid();
   my_mac_adress();
+
+  client.setTimeout(500);
 
   String supla_hostname = read_supla_hostname().c_str();
   supla_hostname.replace(" ", "-");

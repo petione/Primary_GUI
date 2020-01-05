@@ -467,9 +467,6 @@ void WiFi_up() {
 void WiFiEvent(WiFiEvent_t event) {
   switch (event) {
     case WIFI_EVENT_STAMODE_GOT_IP:
-      //String esid = String(read_wifi_ssid().c_str());
-      Serial.print("WiFi connected SSID: ");
-      Serial.println(String(read_wifi_ssid().c_str()));
       Serial.print("localIP: ");
       Serial.println(WiFi.localIP());
       Serial.print("subnetMask: ");

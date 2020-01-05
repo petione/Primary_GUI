@@ -396,17 +396,6 @@ void Tryb_konfiguracji() {
   Serial.print("Tryb konfiguracji: ");
   Serial.println(Modul_tryb_konfiguracji);
 
-  /*
-    WiFi.softAPdisconnect(true);
-    delay(1000);
-    WiFi.disconnect(true);
-    delay(1000);
-    WiFi.mode(WIFI_AP_STA);
-    delay(1000);
-    WiFi.softAP(Config_Wifi_name, Config_Wifi_pass);
-    delay(1000);
-    Serial.println("Tryb AP");
-  */
   Serial.print("Creating Access Point");
   Serial.print("Setting mode ... ");
   Serial.println(WiFi.mode(WIFI_AP) ? "Ready" : "Failed!");
@@ -496,6 +485,8 @@ void first_start(void) {
 }
 
 void supla_start() {
+  client.setTimeout(500);
+
   read_guid();
   int Location_id = read_supla_id().toInt();
   strcpy(Supla_server, read_supla_server().c_str());
@@ -504,13 +495,9 @@ void supla_start() {
   read_guid();
   my_mac_adress();
 
-  client.setTimeout(500);
-
   String supla_hostname = read_supla_hostname().c_str();
   supla_hostname.replace(" ", "-");
   WiFi.hostname(supla_hostname);
-  WiFi.disconnect(true);// delete old config
-  delay(1000);
   WiFi.setAutoConnect(false);
   WiFi.setPhyMode(WIFI_PHY_MODE_11B);
   WiFi.setOutputPower(20.5);

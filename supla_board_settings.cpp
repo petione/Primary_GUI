@@ -99,7 +99,7 @@ void supla_board_configuration(void) {
   add_Config(CONFIG_PIN);
 
 #else
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
+  //add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
   //add_DS18B20_Thermometer(DS18B20_PIN);
   add_SHT_Sensor();
   add_Led_Config(LED_CONFIG_PIN);

@@ -19,6 +19,7 @@ void save_supla_relay_flag(int nr, String save);
 void save_supla_relay_state(int nr, String save);
 void save_DS18b20_address(String save, int nr);
 void save_DS18b20_name(String save, int nr);
+void save_max_ds18b20(uint8_t val);
 void save_bme_elevation(int temp);
 void save_supla_button_duration(int nr, int save);
 
@@ -36,6 +37,7 @@ int read_supla_relay_flag(int nr);
 int read_supla_relay_state(int nr);
 String read_DS18b20_address(int nr);
 String read_DS18b20_name(int nr);
+uint8_t read_max_ds18b20();
 int read_bme_elevation();
 int read_supla_button_duration(int nr);
 

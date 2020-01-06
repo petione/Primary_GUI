@@ -54,7 +54,8 @@ int nr_bme = 0;
 int nr_oled = 0;
 bool led_config_invert;
 
-_ds18b20_channel_t ds18b20_channel[MAX_DS18B20];
+uint8_t MAX_DS18B20;
+_ds18b20_channel_t ds18b20_channel[MAX_DS18B20_ARR];
 _relay_button_channel relay_button_channel[MAX_RELAY];
 _bme_channel bme_channel;
 _dht_channel dht_channel[MAX_DHT];
@@ -91,9 +92,9 @@ SHTSensor sht;
 // SHTSensor sht(SHTSensor::SHT3X);
 
 // Setup a DS18B20 instance
-OneWire ds18x20[MAX_DS18B20] = 0;
+OneWire ds18x20[MAX_DS18B20_ARR] = 0;
 //const int oneWireCount = sizeof(ds18x20) / sizeof(OneWire);
-DallasTemperature sensor[MAX_DS18B20];
+DallasTemperature sensor[MAX_DS18B20_ARR];
 int ds18b20_channel_first = 0;
 int dht_channel_first = 0;
 
@@ -109,6 +110,9 @@ char Location_Pass[MAX_SUPLA_PASS];
 void setup() {
   Serial.begin(74880);
   EEPROM.begin(EEPROM_SIZE);
+
+  //SPI.begin();
+  //SPI.setFrequency(400000);
 
   if ('2' == char(EEPROM.read(EEPROM_SIZE - 1))) {
     czyszczenieEeprom();
@@ -319,6 +323,13 @@ void createWebServer() {
           read_DS18b20_address(i);
         }
       }
+
+      uint8_t max_ds = httpServer.arg("max_ds18b20").toInt();
+      if (max_ds != 0) {
+        MAX_DS18B20 = max_ds;
+        save_max_ds18b20(MAX_DS18B20);
+      }
+
     }
     if (nr_bme > 0) {
       bme_channel.elevation = httpServer.arg("bme_elevation").toFloat();
@@ -481,6 +492,7 @@ void first_start(void) {
   save_login(DEFAULT_LOGIN);
   save_login_pass(DEFAULT_PASSWORD);
   save_supla_hostname(DEFAULT_HOSTNAME);
+  save_max_ds18b20(1);
   save_bme_elevation(120);
 }
 
@@ -804,6 +816,8 @@ void add_SHT_Sensor() {
 }
 
 void add_DS18B20_Thermometer(int thermpin) {
+  if (nr_ds18b20 == 0) MAX_DS18B20 = read_max_ds18b20();
+  
   int channel = SuplaDevice.addDS18B20Thermometer();
   if (ds18b20_channel_first == 0) ds18b20_channel_first = channel;
 
@@ -816,6 +830,8 @@ void add_DS18B20_Thermometer(int thermpin) {
 }
 
 void add_DS18B20Multi_Thermometer(int thermpin) {
+  if (nr_ds18b20 == 0) MAX_DS18B20 = read_max_ds18b20();
+  
   for (int i = 0; i < MAX_DS18B20; i++) {
     int channel = SuplaDevice.addDS18B20Thermometer();
     if (i == 0) ds18b20_channel_first = channel;

@@ -82,7 +82,7 @@
 //YUNSHAN********************************************************************************************
 #elif defined(YUNSHAN)
 
-#define DEFAULT_HOSTNAME      "YUNSHAN"
+#define DEFAULT_HOSTNAME      "Yunshan"
 
 #define RELAY1_PIN            4
 #define BUTTON1_PIN           0

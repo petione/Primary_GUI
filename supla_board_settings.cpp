@@ -103,8 +103,8 @@ void supla_board_configuration(void) {
 
   add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, INPUT_TYPE_BTN_MONOSTABLE);
 
-  add_DS18B20Multi_Thermometer(DS18B20_PIN);
   add_Sensor(SENSOR1_PIN);
+  add_DS18B20Multi_Thermometer(DS18B20_PIN);
 
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);

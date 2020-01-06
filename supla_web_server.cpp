@@ -111,7 +111,7 @@ String supla_webpage_search(int save) {
   content += "<form method='post' action='setup'>";
   content += "<div class='w'>";
   content += "<h3>Znalezione DS18b20</h3>";
-  for (int i = 0; i < MAX_DS18B20; i++) {
+  for (int i = 0; i < nr_ds18b20; i++) {
     // Search the wire for address
     if ( sensor[i].getAddress(tempSensor, i) ) {
       content += "<i><input name='ds18b20_id_";
@@ -249,7 +249,7 @@ String supla_webpage_start(int save) {
   if (nr_ds18b20 != 0) {
     content += "<div class='w'>";
     content += "<h3>Temperatura</h3>";
-    for (int i = 0; i < nr_ds18b20; i++) {
+    for (int i = 0; i < MAX_DS18B20; i++) {
       double temp = get_temperature(ds18b20_channel[i].channel, 0);
       if (ds18b20_channel[i].type == 1) {
         content += "<i><input name='ds18b20_name_id_";
@@ -258,7 +258,7 @@ String supla_webpage_start(int save) {
         content += MAX_DS18B20_NAME;
         content += "><label>";
         content += "Nazwa ";
-        content += i;
+        content += i + 1;
         content += "</label></i>";
         content += "<i><input name='ds18b20_channel_id_";
         content += i;
@@ -356,10 +356,13 @@ String supla_webpage_start(int save) {
   }
 
 
-  if (nr_button > 0 || nr_relay > 0) {
+  if (nr_button != 0 || nr_relay != 0 || nr_ds18b20 != 0) {
     content += "<div class='w'>";
     content += "<h3>Ustawienia modułu</h3>";
-    if (nr_button > 0) {
+    if (nr_ds18b20 != 0) {
+      content += "<i><label>MAX DS18b20</label><input name='max_ds18b20' type='number' placeholder='0' step='1' min='1' max='8' value='" + String(MAX_DS18B20) + "'></i>";
+    }
+    if (nr_button != 0) {
       for (int i = 0; i < nr_button; ++i) {
         int select_button = read_supla_button_type(i);
         content += "<i><label>Przycisk ";
@@ -381,7 +384,7 @@ String supla_webpage_start(int save) {
         content += "</select></i>";
       }
     }
-    if (nr_relay > 0) {
+    if (nr_relay != 0) {
       for (int i = 0; i < nr_relay; ++i) {
         byte v = digitalRead(relay_button_channel[i].relay);
         if (relay_button_channel[i].invert == 1) v ^= 1;
@@ -409,10 +412,10 @@ String supla_webpage_start(int save) {
   }
   content += "<button type='submit'>Zapisz</button></form>";
   content += "<br>";
-  if (nr_ds18b20 > 1) {
+  //if (MAX_DS18B20 > 1) {
     content += "<a href='/search'><button>Szukaj DS</button></a>";
     content += "<br><br>";
-  }
+  //}
   content += "<a href='/firmware_up'><button>Aktualizacja</button></a>";
   content += "<br><br>";
   content += "<form method='post' action='eeprom'>";

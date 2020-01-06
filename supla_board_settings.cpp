@@ -52,7 +52,7 @@ void supla_board_configuration(void) {
 #if defined(SONOFF_BASIC_CWU)
 
   add_Relay(RELAY_PIN);
-  add_Relay_Button(VIRTUAL_PIN_LOCK, BUTTON_PIN, 1);
+  add_Relay_Button(VIRTUAL_PIN_LOCK, BUTTON_PIN, INPUT_TYPE_BTN_MONOSTABLE);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
@@ -70,34 +70,46 @@ void supla_board_configuration(void) {
   //SONOFF_TOUCH_2GANG*****************************************************************************
 #elif defined(SONOFF_TOUCH_2GANG)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, INPUT_TYPE_BTN_MONOSTABLE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, INPUT_TYPE_BTN_MONOSTABLE);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
   //SONOFF_TOUCH_2GANG_ESP8285***********************************************************************
 #elif defined(SONOFF_TOUCH_2GANG_ESP8285)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, INPUT_TYPE_BTN_MONOSTABLE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, INPUT_TYPE_BTN_MONOSTABLE);
 
   add_DHT22_Thermometer(DHT22_PIN);
   //add_DS18B20_Thermometer(DS18B20_PIN);
-  
+
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
   //SONOFF_TOUCH_3GANG_ESP8285***********************************************************************
 #elif defined(SONOFF_TOUCH_3GANG_ESP8285)
 
-  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
-  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, 1);
-  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, 1);
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, INPUT_TYPE_BTN_MONOSTABLE);
+  add_Relay_Button(RELAY2_PIN, BUTTON2_PIN, INPUT_TYPE_BTN_MONOSTABLE);
+  add_Relay_Button(RELAY3_PIN, BUTTON3_PIN, INPUT_TYPE_BTN_MONOSTABLE);
   add_DS18B20_Thermometer(DS18B20_PIN);
-  
+
   add_Led_Config_Invert(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
+  //YUNSHAN********************************************************************************************
+#elif defined(YUNSHAN)
+
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, INPUT_TYPE_BTN_MONOSTABLE);
+
+  add_DS18B20Multi_Thermometer(DS18B20_PIN);
+  add_Sensor(SENSOR1_PIN);
+
+  add_Led_Config(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+
+  //INNE***********************************************************************************************
 #else
   //add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);
   //add_DS18B20_Thermometer(DS18B20_PIN);
@@ -109,6 +121,17 @@ void supla_board_configuration(void) {
 
 #endif
 }
+
+
+
+
+
+
+//*************************************************************************************************
+//supla_DigitalRead********************************************************************************
+//supla_DigitalWrite*******************************************************************************
+//*************************************************************************************************
+
 
 //SONOFF_BASIC_CWU *******************************************************************************
 #if defined(SONOFF_BASIC_CWU)

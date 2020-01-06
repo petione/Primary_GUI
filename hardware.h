@@ -8,6 +8,7 @@
 //#define SONOFF_TOUCH_2GANG
 //#define SONOFF_TOUCH_2GANG_ESP8285
 //#define SONOFF_TOUCH_3GANG_ESP8285
+#define YUNSHAN
 
 
 //SONOFF_BASIC_CWU *******************************************************************************
@@ -77,6 +78,20 @@
 #define CONFIG_PIN            9
 
 #define DS18B20_PIN           3
+
+//YUNSHAN********************************************************************************************
+#elif defined(YUNSHAN)
+
+#define DEFAULT_HOSTNAME      "YUNSHAN"
+
+#define RELAY1_PIN            4
+#define BUTTON1_PIN           0
+
+#define DS18B20_PIN           3
+#define SENSOR1_PIN           5
+
+#define LED_CONFIG_PIN        2
+#define CONFIG_PIN            0
 
 //INNE***********************************************************************************************
 #else

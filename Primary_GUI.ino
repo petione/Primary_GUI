@@ -619,8 +619,8 @@ void supla_led_set(int ledPin, bool hiIsLo) {
 }
 
 void supla_ds18b20_channel_start(void) {
-  if (nr_ds18b20 > 0 ) {
-    Serial.println("DS18B2 init");
+  if (nr_ds18b20 != 0 ) {
+    Serial.print("DS18B2 init: "); Serial.println(nr_ds18b20);
     Serial.print("Parasite power is: ");
     if ( sensor[0].isParasitePowerMode() ) {
       Serial.println("ON");
@@ -640,7 +640,8 @@ void supla_ds18b20_channel_start(void) {
 }
 
 void supla_dht_start(void) {
-  if (nr_dht > 0 ) {
+  if (nr_dht != 0 ) {
+    Serial.print("DHT init: "); Serial.println(nr_dht);
     for (int i = 0; i < nr_dht; i++) {
       if (dht_channel[i].type == TYPE_SENSOR_DHT) {
         dht_sensor[i].begin();
@@ -700,7 +701,7 @@ void add_Led_Config_Invert(int led) {
 }
 
 void add_Config(int pin) {
-  pinMode(pin, INPUT);
+  pinMode(pin, INPUT_PULLUP);
 }
 
 void add_Relay(int relay) {
@@ -823,6 +824,7 @@ void add_DS18B20Multi_Thermometer(int thermpin) {
     ds18b20_channel[nr_ds18b20].pin = thermpin;
     ds18b20_channel[nr_ds18b20].channel = channel;
     ds18b20_channel[nr_ds18b20].type = 1;
+    ds18b20_channel[nr_ds18b20].name = read_DS18b20_name(nr_ds18b20);
     ds18b20_channel[nr_ds18b20].address = read_DS18b20_address(i).c_str();
     nr_ds18b20++;
   }

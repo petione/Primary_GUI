@@ -109,6 +109,19 @@ void supla_board_configuration(void) {
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
+  //WEMOS_D1_MINI_8DS_OLED********************************************************************************************
+#elif defined(WEMOS_D1_MINI_8DS_OLED)
+
+  add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, CHOICE_TYPE);
+
+  add_BME280_Sensor();
+  add_DS18B20Multi_Thermometer(DS18B20_PIN);
+
+  add_Oled();
+
+  add_Led_Config(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+
   //INNE***********************************************************************************************
 #else
   //add_Relay_Button(RELAY1_PIN, BUTTON1_PIN, 1);

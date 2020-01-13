@@ -8,8 +8,9 @@
 //#define SONOFF_TOUCH_2GANG
 //#define SONOFF_TOUCH_2GANG_ESP8285
 //#define SONOFF_TOUCH_3GANG_ESP8285
-#define YUNSHAN
-
+//#define YUNSHAN
+//#define WEMOS_D1_MINI
+#define WEMOS_D1_MINI_8DS_OLED
 
 //SONOFF_BASIC_CWU *******************************************************************************
 #if defined(SONOFF_BASIC_CWU)
@@ -89,6 +90,27 @@
 
 #define DS18B20_PIN           3
 #define SENSOR1_PIN           5
+
+#define LED_CONFIG_PIN        2
+#define CONFIG_PIN            0
+
+//WEMOS_D1_MINI********************************************************************************************
+#elif defined(WEMOS_D1_MINI)
+
+#define DEFAULT_HOSTNAME      "Wemos D1 mini"
+
+#define LED_CONFIG_PIN        2
+#define CONFIG_PIN            0
+
+//WEMOS_D1_MINI_8DS_OLED********************************************************************************************
+#elif defined(WEMOS_D1_MINI_8DS_OLED)
+
+#define DEFAULT_HOSTNAME      "Wemos 8DS OLED"
+
+#define RELAY1_PIN            13
+#define BUTTON1_PIN           0
+
+#define DS18B20_PIN           12
 
 #define LED_CONFIG_PIN        2
 #define CONFIG_PIN            0

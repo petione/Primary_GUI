@@ -276,7 +276,7 @@ String supla_webpage_start(int save) {
         content += MAX_DS18B20_NAME;
         content += "><label>";
         content += "Nazwa ";
-        content += i;
+        content += i + 1;
         content += "</label></i>";
         content += "<i><label>";
         if (temp != -275)content += temp;
@@ -412,10 +412,10 @@ String supla_webpage_start(int save) {
   }
   content += "<button type='submit'>Zapisz</button></form>";
   content += "<br>";
-  //if (MAX_DS18B20 > 1) {
+  if (MAX_DS18B20 > 1) {
     content += "<a href='/search'><button>Szukaj DS</button></a>";
     content += "<br><br>";
-  //}
+  }
   content += "<a href='/firmware_up'><button>Aktualizacja</button></a>";
   content += "<br><br>";
   content += "<form method='post' action='eeprom'>";

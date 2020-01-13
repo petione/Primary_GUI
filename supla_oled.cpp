@@ -176,7 +176,9 @@ void display_temperature(OLEDDisplay *display, OLEDDisplayUiState* state, int16_
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->drawXbm(x + 0, y + drawHeightIcon, temp_width, temp_height, temp_bits);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(x + temp_width + 20, y + display->getHeight() / 2 - 15, ds18b20_channel[state->currentFrame].name);
+  if (ds18b20_channel[state->currentFrame].name != NULL) {
+    display->drawString(x + temp_width + 20, y + display->getHeight() / 2 - 15, ds18b20_channel[state->currentFrame].name);
+  }
   display->setFont(ArialMT_Plain_24);
   String temp = get_temperature(ds18b20_channel[state->currentFrame].last_val);
   display->drawString(x + temp_width + 10, y + drawStringIcon, temp);

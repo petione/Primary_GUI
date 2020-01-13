@@ -111,9 +111,6 @@ void setup() {
   Serial.begin(74880);
   EEPROM.begin(EEPROM_SIZE);
 
-  //SPI.begin();
-  //SPI.setFrequency(400000);
-
   if ('2' == char(EEPROM.read(EEPROM_SIZE - 1))) {
     czyszczenieEeprom();
     first_start();
@@ -393,6 +390,7 @@ void createWebServer() {
         return httpServer.requestAuthentication();
     }
     czyszczenieEeprom();
+
     httpServer.send(200, "text/html", supla_webpage_start(3));
   });
 
@@ -559,9 +557,6 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
         *temp = -275;
         *humidity = -1;
       }
-
-      dht_channel[i].temp = *temp;
-      dht_channel[i].humidity = *humidity;
       //  Serial.print("get_temperature_and_humidity - "); Serial.print(channelNumber); Serial.print(" -- "); Serial.print(*temp); Serial.print(" -- "); Serial.println(*humidity);
     } else if (dht_channel[i].type == TYPE_SENSOR_SHT) {
       if (sht.readSample()) {
@@ -572,6 +567,9 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
         *humidity = -1;
       }
     }
+
+    dht_channel[i].temp = *temp;
+    dht_channel[i].humidity = *humidity;
   }
 }
 
@@ -600,6 +598,8 @@ double get_temperature(int channelNumber, double last_val) {
     t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
 
     if (t == -127) t = -275;
+
+    ds18b20_channel[i].last_val = t;
   }
   return t;
 }
@@ -817,7 +817,7 @@ void add_SHT_Sensor() {
 
 void add_DS18B20_Thermometer(int thermpin) {
   if (nr_ds18b20 == 0) MAX_DS18B20 = read_max_ds18b20();
-  
+
   int channel = SuplaDevice.addDS18B20Thermometer();
   if (ds18b20_channel_first == 0) ds18b20_channel_first = channel;
 
@@ -825,13 +825,14 @@ void add_DS18B20_Thermometer(int thermpin) {
   ds18b20_channel[nr_ds18b20].pin = thermpin;
   ds18b20_channel[nr_ds18b20].channel = channel;
   ds18b20_channel[nr_ds18b20].type = 0;
-  ds18b20_channel[nr_ds18b20].name = read_DS18b20_name(nr_ds18b20);
+  ds18b20_channel[nr_ds18b20].name = String(read_DS18b20_name(nr_ds18b20).c_str());
+  ds18b20_channel[nr_ds18b20].last_val = -275;
   nr_ds18b20++;
 }
 
 void add_DS18B20Multi_Thermometer(int thermpin) {
   if (nr_ds18b20 == 0) MAX_DS18B20 = read_max_ds18b20();
-  
+
   for (int i = 0; i < MAX_DS18B20; i++) {
     int channel = SuplaDevice.addDS18B20Thermometer();
     if (i == 0) ds18b20_channel_first = channel;
@@ -840,8 +841,9 @@ void add_DS18B20Multi_Thermometer(int thermpin) {
     ds18b20_channel[nr_ds18b20].pin = thermpin;
     ds18b20_channel[nr_ds18b20].channel = channel;
     ds18b20_channel[nr_ds18b20].type = 1;
-    ds18b20_channel[nr_ds18b20].name = read_DS18b20_name(nr_ds18b20);
+    ds18b20_channel[nr_ds18b20].name = String(read_DS18b20_name(nr_ds18b20).c_str());
     ds18b20_channel[nr_ds18b20].address = read_DS18b20_address(i).c_str();
+    ds18b20_channel[nr_ds18b20].last_val = -275;
     nr_ds18b20++;
   }
 }

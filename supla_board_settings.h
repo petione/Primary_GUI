@@ -35,6 +35,9 @@ typedef struct {
   int type; //0-single 1-multi
   DeviceAddress deviceAddress;
   double last_val;
+  unsigned long lastTemperatureRequest;
+  int8_t retryCounter;
+  bool iterationComplete;
 } _ds18b20_channel_t;
 extern _ds18b20_channel_t ds18b20_channel[];
 
@@ -46,6 +49,7 @@ typedef struct {
   double pressure;
   double pressure_sea;
   int elevation;
+  unsigned status;
 } _bme_channel;
 extern _bme_channel bme_channel;
 

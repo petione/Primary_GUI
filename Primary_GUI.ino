@@ -509,8 +509,8 @@ void supla_start() {
   supla_hostname.replace(" ", "-");
   WiFi.hostname(supla_hostname);
   WiFi.setAutoConnect(false);
-  WiFi.setPhyMode(WIFI_PHY_MODE_11B);
-  WiFi.setOutputPower(20.5);
+  //WiFi.setPhyMode(WIFI_PHY_MODE_11B);
+  //WiFi.setOutputPower(20.5);
   WiFi.onEvent(WiFiEvent);
 
 
@@ -538,15 +538,8 @@ int32_t read_rssi_oled (void) {
 }
 
 void get_temperature_and_humidity(int channelNumber, double * temp, double * humidity) {
-  if  (channelNumber == bme_channel.temperature_channel && nr_bme != 0) {
 
-    *temp = bme.readTemperature();
-    *humidity = bme.readHumidity();
-
-    bme_channel.temp = *temp;
-    bme_channel.humidity = *humidity;
-
-  } else {
+  if (nr_dht != 0 ) {
     int i = channelNumber - dht_channel_first;
 
     if (dht_channel[i].type == TYPE_SENSOR_DHT) {
@@ -557,6 +550,7 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
         *temp = -275;
         *humidity = -1;
       }
+
       //  Serial.print("get_temperature_and_humidity - "); Serial.print(channelNumber); Serial.print(" -- "); Serial.print(*temp); Serial.print(" -- "); Serial.println(*humidity);
     } else if (dht_channel[i].type == TYPE_SENSOR_SHT) {
       if (sht.readSample()) {
@@ -570,16 +564,29 @@ void get_temperature_and_humidity(int channelNumber, double * temp, double * hum
 
     dht_channel[i].temp = *temp;
     dht_channel[i].humidity = *humidity;
+
+  } else {
+    if (bme_channel.status) {
+      *temp = bme.readTemperature();
+      *humidity = bme.readHumidity();
+    } else {
+      *temp = -275;
+      *humidity = -1;
+    }
+    bme_channel.temp = *temp;
+    bme_channel.humidity = *humidity;
   }
+
 }
 
 double get_pressure(int channelNumber, double last_val) {
-  double pressure = -275;
-  double pressure_sea = -275;
+  double pressure = -1;
+  double pressure_sea = -1;
 
-  pressure = bme.readPressure();
-  pressure_sea = pressure / pow(2.718281828, - (bme_channel.elevation / ((273.15 + bme_channel.temp) * 29.263))) / 100.0F;
-
+  if (bme_channel.status) {
+    pressure = bme.readPressure();
+    pressure_sea = pressure / pow(2.718281828, - (bme_channel.elevation / ((273.15 + bme_channel.temp) * 29.263))) / 100.0F;
+  }
   bme_channel.pressure = pressure / 100.0F;
   bme_channel.pressure_sea = pressure_sea;
 
@@ -587,21 +594,45 @@ double get_pressure(int channelNumber, double last_val) {
 }
 
 double get_temperature(int channelNumber, double last_val) {
-  double t = -275;
   int i = channelNumber - ds18b20_channel_first;
 
-  if ( i >= 0 && nr_ds18b20 != 0) {
-    if ( ds18b20_channel[i].address == "FFFFFFFFFFFFFFFF" ) return -275;
+  if ( i >= 0 ) {
+    if ( ds18b20_channel[i].address == "FFFFFFFFFFFFFFFF" ) return TEMPERATURE_NOT_AVAILABLE;
 
-    if ( i == 0) sensor[i].requestTemperatures();
+    if ( (ds18b20_channel[i].lastTemperatureRequest + 10000) <  millis() && ds18b20_channel[i].iterationComplete) {
+      sensor[i].requestTemperatures();
 
-    t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
+      ds18b20_channel[i].iterationComplete = false;
+      ds18b20_channel[i].lastTemperatureRequest = millis();
+      //Serial.print("requestTemperatures: "); Serial.println(i);
+    }
 
-    if (t == -127) t = -275;
+    if ( ds18b20_channel[i].lastTemperatureRequest + 5000 <  millis()) {
+      double t = -275;
+      t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
 
-    ds18b20_channel[i].last_val = t;
+      if (t == DEVICE_DISCONNECTED_C || t == 85.0) {
+        t = TEMPERATURE_NOT_AVAILABLE;
+      }
+
+      if (t == TEMPERATURE_NOT_AVAILABLE) {
+        ds18b20_channel[i].retryCounter++;
+        if (ds18b20_channel[i].retryCounter > 3) {
+          ds18b20_channel[i].retryCounter = 0;
+        } else {
+          t = ds18b20_channel[i].last_val;
+        }
+      } else {
+        ds18b20_channel[i].retryCounter = 0;
+      }
+
+      ds18b20_channel[i].last_val = t;
+      ds18b20_channel[i].iterationComplete = true;
+
+      //Serial.print("getTempC: "); Serial.print(i); Serial.print(" temp: "); Serial.println(t);
+    }
   }
-  return t;
+  return ds18b20_channel[i].last_val;
 }
 
 void supla_led_blinking_func(void *timer_arg) {
@@ -642,11 +673,19 @@ void supla_ds18b20_channel_start(void) {
     for (int i = 0; i < nr_ds18b20; i++) {
       sensor[i].setOneWire(&ds18x20[i]);
       sensor[i].begin();
+
       if (ds18b20_channel[i].type == 1) {
         sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
       } else {
         if (sensor[i].getAddress(ds18b20_channel[i].deviceAddress, 0)) sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
       }
+
+      sensor[i].setWaitForConversion(true);
+      sensor[i].requestTemperatures();
+      sensor[i].setWaitForConversion(false);
+
+      ds18b20_channel[i].iterationComplete = false;
+      ds18b20_channel[i].lastTemperatureRequest = -2500;
     }
   }
 }
@@ -684,7 +723,8 @@ void supla_bme_start(void) {
     // Inicjalizacja BME280
     Wire.begin(SDA, SCL);
 
-    if (!bme.begin()) { //0x76
+    bme_channel.status = bme.begin();
+    if (!bme_channel.status) {
       Serial.println("Nie znaleleziono czujnika BME280, sprawdz poprawność podłączenia i okablowanie!");
       //while (1);
     }

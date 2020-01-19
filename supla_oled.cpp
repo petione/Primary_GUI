@@ -161,7 +161,7 @@ String get_humidity(double humidity) {
 }
 
 String get_pressure(double pressure) {
-  if (pressure == -275) {
+  if (pressure == -1) {
     return "error";
   } else {
     return String(floor(pressure), 0);
@@ -257,7 +257,7 @@ void display_bme280_pressure(OLEDDisplay *display, OLEDDisplayUiState* state, in
   String pressure = get_pressure(bme_channel.pressure_sea);
   display->drawString(x + pressure_width + 10, y + drawStringIcon, pressure);
   display->setFont(ArialMT_Plain_10);
-  display->drawString(x + pressure_width + 10 + (pressure.length() * 14), y + drawStringIcon, "hPa");
+  display->drawString(x + pressure_width + 10 + (pressure.length() * 13), y + drawStringIcon, "hPa");
 }
 
 void display_blank(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {

@@ -22,7 +22,8 @@
 //DS18B20 ************************************************************************************************
 extern uint8_t MAX_DS18B20;
 #define MAX_DS18B20_ARR 8
-#define  TEMPERATURE_PRECISION  10  // rozdzielczość czujnika DS 9 -12 bit
+#define  TEMPERATURE_PRECISION  12  // rozdzielczość czujnika DS 9 -12 bit
+#define TEMPERATURE_NOT_AVAILABLE -275
 
 //EEPROM *************************************************************************************************
 #define EEPROM_SIZE           4096/4

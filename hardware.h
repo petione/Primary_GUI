@@ -5,6 +5,7 @@
 
 //#define SONOFF_BASIC_CWU
 //#define SONOFF_BASIC
+//#define SONOFF_BASIC_RF
 //#define SONOFF_TOUCH_2GANG
 //#define SONOFF_TOUCH_2GANG_ESP8285
 //#define SONOFF_TOUCH_3GANG_ESP8285
@@ -26,6 +27,15 @@
 #elif defined(SONOFF_BASIC)
 
 #define DEFAULT_HOSTNAME      "SONOFF BASIC"
+#define LED_CONFIG_PIN        13
+#define RELAY_PIN             12
+#define BUTTON_PIN            0
+#define CONFIG_PIN            0
+
+//SONOFF_BASIC_RF **********************************************************************************
+#elif defined(SONOFF_BASIC_RF)
+
+#define DEFAULT_HOSTNAME      "Sonoff basic RF"
 #define LED_CONFIG_PIN        13
 #define RELAY_PIN             12
 #define BUTTON_PIN            0

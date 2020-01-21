@@ -303,7 +303,7 @@ String supla_webpage_start(int save) {
     }
     content += "</div>";
   }
-  if (nr_bme > 0 ) {
+  if (nr_bme != 0 ) {
     content += "<div class='w'>";
     content += "<h3>BME280</h3>";
     get_temperature_and_humidity(bme_channel.temperature_channel, &temp_html, &humidity_html);
@@ -412,10 +412,8 @@ String supla_webpage_start(int save) {
   }
   content += "<button type='submit'>Zapisz</button></form>";
   content += "<br>";
-  if (MAX_DS18B20 > 1) {
-    content += "<a href='/search'><button>Szukaj DS</button></a>";
-    content += "<br><br>";
-  }
+  content += "<a href='/search'><button>Szukaj DS</button></a>";
+  content += "<br><br>";
   content += "<a href='/firmware_up'><button>Aktualizacja</button></a>";
   content += "<br><br>";
   content += "<form method='post' action='eeprom'>";

@@ -67,6 +67,13 @@ void supla_board_configuration(void) {
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
+  //SONOFF_BASIC_RF *********************************************************************************
+#elif defined(SONOFF_BASIC_RF)
+
+  add_Relay_Button(RELAY_PIN, BUTTON_PIN, CHOICE_TYPE);
+  add_Led_Config(LED_CONFIG_PIN);
+  add_Config(CONFIG_PIN);
+
   //SONOFF_TOUCH_2GANG*****************************************************************************
 #elif defined(SONOFF_TOUCH_2GANG)
 

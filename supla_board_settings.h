@@ -6,12 +6,12 @@
 #define TYPE_SENSOR_DHT 0
 #define TYPE_SENSOR_SHT 1
 
-extern int nr_button;
-extern int nr_relay;
-extern int nr_ds18b20;
-extern int nr_dht;
-extern int nr_bme;
-extern int nr_oled;
+extern uint8_t nr_button;
+extern uint8_t nr_relay;
+extern uint8_t nr_ds18b20;
+extern uint8_t nr_dht;
+extern uint8_t nr_bme;
+extern uint8_t nr_oled;
 
 extern int ds18b20_channel_first;
 

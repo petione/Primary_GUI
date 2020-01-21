@@ -41,17 +41,17 @@ extern "C" {
 #include "user_interface.h"
 }
 
-#define DRD_TIMEOUT 5// Number of seconds after reset during which a subseqent reset will be considered a double reset.
+#define DRD_TIMEOUT 10// Number of seconds after reset during which a subseqent reset will be considered a double reset.
 #define DRD_ADDRESS 0 // RTC Memory Address for the DoubleResetDetector to use
 DoubleResetDetector drd(DRD_TIMEOUT, DRD_ADDRESS);
 
-int nr_button = 0;
-int nr_relay = 0;
-int invert = 0;
-int nr_ds18b20 = 0;
-int nr_dht = 0;
-int nr_bme = 0;
-int nr_oled = 0;
+uint8_t nr_button = 0;
+uint8_t nr_relay = 0;
+uint8_t invert = 0;
+uint8_t nr_ds18b20 = 0;
+uint8_t nr_dht = 0;
+uint8_t nr_bme = 0;
+uint8_t nr_oled = 0;
 bool led_config_invert;
 
 uint8_t MAX_DS18B20;
@@ -73,7 +73,7 @@ unsigned long wait_for_WiFi;
 int config_state = HIGH;
 int last_config_state = HIGH;
 unsigned long time_last_config_change;
-long config_delay = 5000;
+long config_delay = 10000;
 
 const char* www_username;
 const char* www_password;
@@ -120,24 +120,14 @@ void setup() {
     save_guid();
   }
 
-  SuplaDevice.setStatusFuncImpl(&status_func);
-  SuplaDevice.setTimerFuncImpl(&supla_timer);
-
   supla_board_configuration();
 
-  supla_ds18b20_channel_start();
+  supla_ds18b20_start();
   supla_dht_start();
   supla_bme_start();
-  supla_start();
   supla_sht_start();
 
-  if (drd.detectDoubleReset()) {
-    drd.stop();
-    gui_color = GUI_GREEN;
-    Modul_tryb_konfiguracji = 2;
-    Tryb_konfiguracji();
-  }
-  else gui_color = GUI_BLUE;
+  supla_start();
 
   if (String(read_wifi_ssid().c_str()) == 0
       || String(read_wifi_pass().c_str()) == 0
@@ -152,6 +142,14 @@ void setup() {
     Modul_tryb_konfiguracji = 2;
     Tryb_konfiguracji();
   }
+
+  if (drd.detectDoubleReset()) {
+    drd.stop();
+    gui_color = GUI_GREEN;
+    Modul_tryb_konfiguracji = 2;
+    Tryb_konfiguracji();
+  }
+  else gui_color = GUI_BLUE;
 
   Serial.println();
   Serial.println("Uruchamianie serwera...");
@@ -216,7 +214,7 @@ void supla_arduino_eth_setup(uint8_t mac[6], IPAddress *ip) {
 }
 
 void supla_timer() {
-  if (nr_relay > 0 ) {
+  if (nr_relay != 0 ) {
     for (int i = 0; i < nr_relay; ++i) {
       int channel_count = relay_button_channel[i].channel;
 
@@ -362,8 +360,8 @@ void createWebServer() {
         return httpServer.requestAuthentication();
     }
     //SetupDS18B20Multi();
-    if (MAX_DS18B20 > 0) {
-      for (int i = 0; i < MAX_DS18B20; i++) {
+    if (nr_ds18b20 != 0) {
+      for (int i = 0; i < nr_ds18b20; i++) {
         String ds = "ds18b20_id_";
         ds += i;
         String address = httpServer.arg(ds);
@@ -405,9 +403,12 @@ void Tryb_konfiguracji() {
   Serial.print("Tryb konfiguracji: ");
   Serial.println(Modul_tryb_konfiguracji);
 
+  WiFi.softAPdisconnect(true);
+  WiFi.disconnect(true);
+
   Serial.print("Creating Access Point");
   Serial.print("Setting mode ... ");
-  Serial.println(WiFi.mode(WIFI_AP) ? "Ready" : "Failed!");
+  Serial.println(WiFi.mode(WIFI_AP_STA) ? "Ready" : "Failed!");
 
   while (!WiFi.softAP(Config_Wifi_name, Config_Wifi_pass))
   {
@@ -430,6 +431,7 @@ void Tryb_konfiguracji() {
 
       SuplaDevice.iterate();
       httpServer.handleClient();
+      supla_oled_timer();
     }
   }
 }
@@ -496,6 +498,9 @@ void first_start(void) {
 
 void supla_start() {
   client.setTimeout(500);
+
+  SuplaDevice.setStatusFuncImpl(&status_func);
+  SuplaDevice.setTimerFuncImpl(&supla_timer);
 
   read_guid();
   int Location_id = read_supla_id().toInt();
@@ -661,7 +666,7 @@ void supla_led_set(int ledPin, bool hiIsLo) {
   digitalWrite(ledPin, led_config_invert ? LOW : HIGH);
 }
 
-void supla_ds18b20_channel_start(void) {
+void supla_ds18b20_start(void) {
   if (nr_ds18b20 != 0 ) {
     Serial.print("DS18B2 init: "); Serial.println(nr_ds18b20);
     Serial.print("Parasite power is: ");
@@ -680,18 +685,17 @@ void supla_ds18b20_channel_start(void) {
         if (sensor[i].getAddress(ds18b20_channel[i].deviceAddress, 0)) sensor[i].setResolution(ds18b20_channel[i].deviceAddress, TEMPERATURE_PRECISION);
       }
 
-      sensor[i].setWaitForConversion(true);
-      sensor[i].requestTemperatures();
       sensor[i].setWaitForConversion(false);
+      sensor[i].requestTemperatures();
 
       ds18b20_channel[i].iterationComplete = false;
-      ds18b20_channel[i].lastTemperatureRequest = -2500;
+      ds18b20_channel[i].lastTemperatureRequest = 0;
     }
   }
 }
 
 void supla_dht_start(void) {
-  if (nr_dht != 0 ) {
+  if ( nr_dht != 0 ) {
     Serial.print("DHT init: "); Serial.println(nr_dht);
     for (int i = 0; i < nr_dht; i++) {
       if (dht_channel[i].type == TYPE_SENSOR_DHT) {
@@ -702,7 +706,8 @@ void supla_dht_start(void) {
 }
 
 void supla_sht_start(void) {
-  if (nr_dht > 0 ) {
+  if (nr_dht != 0) {
+    Serial.println("SHT init");
     for (int i = 0; i < nr_dht; i++) {
       if (dht_channel[i].type == TYPE_SENSOR_SHT) {
         Wire.begin(SDA, SCL);
@@ -719,7 +724,8 @@ void supla_sht_start(void) {
 }
 
 void supla_bme_start(void) {
-  if (nr_bme > 0) {
+  if (nr_bme != 0) {
+    Serial.println("BME init");
     // Inicjalizacja BME280
     Wire.begin(SDA, SCL);
 
@@ -859,7 +865,7 @@ void add_DS18B20_Thermometer(int thermpin) {
   if (nr_ds18b20 == 0) MAX_DS18B20 = read_max_ds18b20();
 
   int channel = SuplaDevice.addDS18B20Thermometer();
-  if (ds18b20_channel_first == 0) ds18b20_channel_first = channel;
+  if (nr_ds18b20 == 0) ds18b20_channel_first = channel;
 
   ds18x20[nr_ds18b20] = thermpin;
   ds18b20_channel[nr_ds18b20].pin = thermpin;

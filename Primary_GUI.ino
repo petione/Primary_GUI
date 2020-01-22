@@ -695,7 +695,7 @@ void supla_ds18b20_start(void) {
       sensor[i].requestTemperatures();
 
       ds18b20_channel[i].iterationComplete = false;
-      ds18b20_channel[i].lastTemperatureRequest = 0;
+      ds18b20_channel[i].lastTemperatureRequest = -2500;
     }
   }
 }

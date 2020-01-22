@@ -45,7 +45,7 @@ void supla_oled_logo(OLEDDisplay *display) {
 }
 
 void display_signal(OLEDDisplay *display) {
-  int x = display->getWidth() - 16;
+  int x = display->getWidth() - 17;
   int y = 0;
   int value = read_rssi_oled();
   //clear area only

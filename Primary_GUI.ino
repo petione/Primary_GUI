@@ -1,4 +1,3 @@
-
 /* *************************************************************************
 
    Wszystkie potrzebne modyfikacja znajdują się w pliku "supla_board_settings.cpp"
@@ -127,6 +126,7 @@ void setup() {
   supla_bme_start();
   supla_sht_start();
 
+  wifi_start();
   supla_start();
 
   if (String(read_wifi_ssid().c_str()) == 0
@@ -478,7 +478,7 @@ void WiFiEvent(WiFiEvent_t event) {
       Serial.println(" dBm");
       break;
     case WIFI_EVENT_STAMODE_DISCONNECTED:
-      Serial.println("WiFi lost connection");
+      //Serial.println("WiFi lost connection");
       break;
   }
 }
@@ -496,9 +496,19 @@ void first_start(void) {
   save_bme_elevation(120);
 }
 
-void supla_start() {
+void wifi_start() {
   client.setTimeout(500);
 
+  String supla_hostname = read_supla_hostname().c_str();
+  supla_hostname.replace(" ", "-");
+  WiFi.hostname(supla_hostname);
+  WiFi.setAutoConnect(false);
+  //WiFi.setPhyMode(WIFI_PHY_MODE_11B);
+  //WiFi.setOutputPower(20.5);
+  WiFi.onEvent(WiFiEvent);
+}
+
+void supla_start() {
   SuplaDevice.setStatusFuncImpl(&status_func);
   SuplaDevice.setTimerFuncImpl(&supla_timer);
 
@@ -509,15 +519,6 @@ void supla_start() {
 
   read_guid();
   my_mac_adress();
-
-  String supla_hostname = read_supla_hostname().c_str();
-  supla_hostname.replace(" ", "-");
-  WiFi.hostname(supla_hostname);
-  WiFi.setAutoConnect(false);
-  //WiFi.setPhyMode(WIFI_PHY_MODE_11B);
-  //WiFi.setOutputPower(20.5);
-  WiFi.onEvent(WiFiEvent);
-
 
   SuplaDevice.setName(read_supla_hostname().c_str());
 
@@ -614,7 +615,12 @@ double get_temperature(int channelNumber, double last_val) {
 
     if ( ds18b20_channel[i].lastTemperatureRequest + 5000 <  millis()) {
       double t = -275;
-      t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
+
+      if (nr_ds18b20 == 1) {
+        t = sensor[0].getTempCByIndex(0);
+      } else {
+        t = sensor[i].getTempC(ds18b20_channel[i].deviceAddress);
+      }
 
       if (t == DEVICE_DISCONNECTED_C || t == 85.0) {
         t = TEMPERATURE_NOT_AVAILABLE;

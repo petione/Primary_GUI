@@ -412,8 +412,10 @@ String supla_webpage_start(int save) {
   }
   content += "<button type='submit'>Zapisz</button></form>";
   content += "<br>";
-  content += "<a href='/search'><button>Szukaj DS</button></a>";
-  content += "<br><br>";
+  if (nr_ds18b20 > 1) {
+    content += "<a href='/search'><button>Szukaj DS</button></a>";
+    content += "<br><br>";
+  }
   content += "<a href='/firmware_up'><button>Aktualizacja</button></a>";
   content += "<br><br>";
   content += "<form method='post' action='eeprom'>";

@@ -360,7 +360,7 @@ String supla_webpage_start(int save) {
     content += "<div class='w'>";
     content += "<h3>Ustawienia modułu</h3>";
     if (nr_ds18b20 != 0) {
-      content += "<i><label>MAX DS18b20</label><input name='max_ds18b20' type='number' placeholder='0' step='1' min='1' max='8' value='" + String(MAX_DS18B20) + "'></i>";
+      content += "<i><label>MAX DS18b20</label><input name='max_ds18b20' type='number' placeholder='0' step='1' min='1' max='" + String(MAX_DS18B20_ARR) + "' value='" + String(MAX_DS18B20) + "'></i>";
     }
     if (nr_button != 0) {
       for (int i = 0; i < nr_button; ++i) {

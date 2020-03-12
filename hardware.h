@@ -11,7 +11,7 @@
 //#define SONOFF_TOUCH_3GANG_ESP8285
 //#define YUNSHAN
 //#define WEMOS_D1_MINI
-#define WEMOS_D1_MINI_8DS_OLED
+//#define WEMOS_D1_MINI_8DS_OLED
 
 //SONOFF_BASIC_CWU *******************************************************************************
 #if defined(SONOFF_BASIC_CWU)

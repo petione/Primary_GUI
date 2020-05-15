@@ -7,7 +7,7 @@
 //#include <EEPROM.h>
 
 #define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
+#include <SuplaDevicePrimary.h>
 
 #include "supla_settings.h"
 #include "supla_eeprom.h"
@@ -25,7 +25,7 @@ const char* gui_box_shadow = "box-shadow:0 1px 30px rgba(0,0,0,.9)";
 
 uint8_t mac[WL_MAC_ADDR_LENGTH];
 
-byte Modul_tryb_konfiguracji = 0;
+byte Modul_tryb_konfiguracji = 1;
 
 _supla_status supla_status;
 //supla_status.status_msg = "";

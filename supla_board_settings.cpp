@@ -33,7 +33,7 @@
 #include <Arduino.h>
 
 #define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
+#include <SuplaDevicePrimary.h>
 
 #include "supla_settings.h"
 #include "supla_eeprom.h"
@@ -63,14 +63,14 @@ void supla_board_configuration(void) {
   //SONOFF_BASIC *********************************************************************************
 #elif defined(SONOFF_BASIC)
 
-  add_Relay_Button(RELAY_PIN, BUTTON_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY_PIN, BUTTON_PIN, INPUT_TYPE_BTN_MONOSTABLE);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 
   //SONOFF_BASIC_RF *********************************************************************************
 #elif defined(SONOFF_BASIC_RF)
 
-  add_Relay_Button(RELAY_PIN, BUTTON_PIN, CHOICE_TYPE);
+  add_Relay_Button(RELAY_PIN, BUTTON_PIN, INPUT_TYPE_BTN_MONOSTABLE);
   add_Led_Config(LED_CONFIG_PIN);
   add_Config(CONFIG_PIN);
 

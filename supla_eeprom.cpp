@@ -2,7 +2,7 @@
 #include <EEPROM.h>
 
 #define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
+#include <SuplaDevicePrimary.h>
 
 #include "ESP8266TrueRandom.h"
 #include "supla_settings.h"

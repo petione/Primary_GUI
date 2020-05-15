@@ -15,7 +15,7 @@
 #include <DoubleResetDetector.h> //Bilioteka by Stephen Denne
 
 #define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
+#include <SuplaDevicePrimary.h>
 
 #include <OneWire.h>
 #include <DallasTemperature.h>

@@ -4,7 +4,7 @@
 
 #include "Arduino.h"
 #define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
+#include <SuplaDevicePrimary.h>
 
 #define  SUPLA_DEVICE_NAME     "SUPLA TESTY"
 #define  CONFIG_WIFI_LOGIN     "MODUL SUPLA"

@@ -1,6 +1,6 @@
 #include "Arduino.h"
 #define SUPLADEVICE_CPP
-#include <SuplaDevice.h>
+#include <SuplaDevicePrimary.h>
 
 #include "supla_settings.h"
 #include "supla_eeprom.h"

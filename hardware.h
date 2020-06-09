@@ -1,13 +1,13 @@
 //#define ARDUINO_OTA
 
 //#define SONOFF_BASIC_CWU
-#define SONOFF_BASIC
+//#define SONOFF_BASIC
 //#define SONOFF_BASIC_RF
 //#define SONOFF_TOUCH_2GANG
 //#define SONOFF_TOUCH_2GANG_ESP8285
 //#define SONOFF_TOUCH_3GANG_ESP8285
 //#define YUNSHAN
-//#define WEMOS_D1_MINI
+#define WEMOS_D1_MINI
 //#define WEMOS_D1_MINI_8DS_OLED
 
 #define SDA 4 //-->D2

@@ -35,6 +35,7 @@
 #include "supla_board_settings.h"
 #include "supla_oled.h"
 #include "hardware.h"
+#include "Pushover.h"
 
 extern "C" {
 #include "user_interface.h"
@@ -106,6 +107,9 @@ char Location_id[MAX_SUPLA_ID];
 char Location_Pass[MAX_SUPLA_PASS];
 //*********************************************************************************************************
 
+//PUSHOVER*************************************************************************************************
+Pushover po = Pushover("SecureAppToken","UserToken", UNSAFE);
+
 void setup() {
   Serial.begin(74880);
   EEPROM.begin(EEPROM_SIZE);
@@ -159,6 +163,8 @@ void setup() {
 #if defined(ARDUINO_OTA)
   arduino_OTA_start();
 #endif
+
+  sendMessagePushover("start ESP");
 }
 
 //*********************************************************************************************************
@@ -1023,4 +1029,15 @@ void arduino_OTA_start() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 #endif
+}
+
+void sendMessagePushover(String massage) {
+  po.setDevice("mi9");
+  po.setMessage(massage);
+  po.setSound("bike");
+  if (po.send()) { //should return 1 on success
+    Serial.println("Pushover - Sending message");
+  } else {
+    Serial.println("Pushover - Error sending message");
+  }
 }

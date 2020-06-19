@@ -502,6 +502,7 @@ void wifi_start() {
   String supla_hostname = read_supla_hostname().c_str();
   supla_hostname.replace(" ", "-");
   WiFi.hostname(supla_hostname);
+  WiFi.softAPdisconnect(true);
   WiFi.setAutoConnect(false);
   //WiFi.setPhyMode(WIFI_PHY_MODE_11B);
   //WiFi.setOutputPower(20.5);
